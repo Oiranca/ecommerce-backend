@@ -1,14 +1,14 @@
 import { Schema, model } from 'mongoose';
-import roles from './roles';
 
-const clientModel = new Schema({
-    id_role: { type: String, required: true },
+// Todo hay que pasar los roles al darse alta dependiendo del endpoint
+
+const usersModel = new Schema({
     name: { type: String, required: true },
     surnames: { type: String, required: true },
     identification: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     phone: { type: Number, required: true, unique: true },
-    role: { type: String, required: true, default: roles.client },
+    role: { type: String, required: true },
     address: {
         street: { type: String, required: true },
         number: { type: Number, required: true },
@@ -18,4 +18,4 @@ const clientModel = new Schema({
     emailIsConfirmed: { type: Boolean, required: true, default: false },
 });
 
-export default model('client', clientModel);
+export default model('client', usersModel);

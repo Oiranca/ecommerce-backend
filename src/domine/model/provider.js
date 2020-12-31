@@ -1,8 +1,9 @@
 import { Schema } from 'mongoose';
+import roles from './roles';
 
 const userProvider = new Schema({
-    id_admin: { type: Array, required: true },
     nameProvider: { type: String, required: true },
+    role: { type: String, required: true, default: roles.provider },
     identification: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     phone: { type: Number, required: true, unique: true },
@@ -12,7 +13,7 @@ const userProvider = new Schema({
         floor: { type: String, required: false },
         postalCode: { type: Number, required: true },
     },
-    emailIsConfirmated: { type: Boolean, required: true, default: false },
+    emailIsConfirmed: { type: Boolean, required: true, default: false },
 });
 
 export default userProvider;
