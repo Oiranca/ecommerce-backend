@@ -3,7 +3,6 @@ import roles from '../../../domine/model/roles';
 
 const registerUsers = async (req, res) => {
     try {
-        console.log(req.body);
         const {
             name,
             surnames,
@@ -23,7 +22,6 @@ const registerUsers = async (req, res) => {
             phone,
             role: roles.client,
             address,
-            // emailIsConfirmed: false,
         });
 
         res.send({ status: 'Ok', message: 'User Create' });

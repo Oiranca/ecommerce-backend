@@ -9,7 +9,7 @@ const userProvider = new Schema({
     phone: { type: Number, required: true, unique: true },
     address: {
         street: { type: String, required: true },
-        number: { type: Number, required: true },
+        numberStreet: { type: Number, required: true },
         floor: { type: String, required: false },
         postalCode: { type: Number, required: true },
     },
