@@ -1,4 +1,4 @@
-import { Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 import roles from './roles';
 
 const userProvider = new Schema({
@@ -16,4 +16,4 @@ const userProvider = new Schema({
     emailIsConfirmed: { type: Boolean, required: true, default: false },
 });
 
-export default userProvider;
+export default model('UsersProvider', userProvider);

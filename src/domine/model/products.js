@@ -7,4 +7,4 @@ const productsModel = new Schema({
     PVD: { type: Number },
 });
 
-export default model('products', productsModel);
+export default model('Products', productsModel);
