@@ -1,12 +1,29 @@
 import express from 'express';
+import dotEnv from 'dotenv';
+import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
+import routers from './insfraestructure/routers/routers';
 
 const app = express();
-const port = 3000;
+dotEnv.config();
 
-app.get('/', (req, res) => {
-    res.send('Hola');
-});
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-app.listen(port, () => {
-    console.log(`Servidor levantando ${port}`);
-});
+routers(app);
+
+const init = async () => {
+    await mongoose.connect(process.env.MONGO, {
+        dbName: 'ecommerce',
+        useCreateIndex: true,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+    });
+};
+init()
+    .then(() => {
+        console.log('Connected to Mongodb');
+        app.listen(process.env.PORT);
+    })
+    .catch((e) => console.log('Mongodb error', e));
