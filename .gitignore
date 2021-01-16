@@ -5,3 +5,5 @@
 .prettierrc.json
 
 .eslintrc.json
+
+.env
