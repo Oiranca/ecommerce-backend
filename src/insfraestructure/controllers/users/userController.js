@@ -1,5 +1,6 @@
 import Users from '../.././../domine/model/users';
 import roles from '../../../domine/model/roles';
+import bcrypt from 'bcrypt';
 
 const registerUsers = async (req, res) => {
     try {
@@ -13,10 +14,12 @@ const registerUsers = async (req, res) => {
             address,
         } = req.body;
 
+        const hash = await bcrypt.hash(password, 15);
+
         await Users.create({
             name,
             surnames,
-            password,
+            password: hash,
             identification,
             email,
             phone,
