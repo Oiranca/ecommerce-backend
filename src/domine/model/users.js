@@ -14,7 +14,7 @@ const usersModel = new Schema({
         type: {
             street: { type: String, required: true },
             numberStreet: { type: Number, required: true },
-            floor: { type: String, required: false },
+            level: { type: String, required: false },
             postalCode: { type: Number, required: true },
         },
     },
