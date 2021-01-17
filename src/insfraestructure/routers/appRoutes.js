@@ -6,6 +6,7 @@ import providerController from '../controllers/provider/providerController';
 import storeController from '../controllers/store/storeController';
 import loginController from '../controllers/login/loginController';
 import profileController from '../controllers/profiles/profileController';
+import { checkAuth } from '../../domine/middlewares/auth';
 
 const userRouters = express.Router();
 
@@ -16,7 +17,7 @@ userRouters.post('/products-register', productController.createProduct);
 userRouters.post('/admin/provider-register', providerController.providerRegister);
 userRouters.post('/store', storeController.registerInStore);
 userRouters.post('/login', loginController.login);
-userRouters.post('/profile', profileController.findProfile);
+userRouters.get('/profile', checkAuth, profileController.findProfile);
 
 //routers.get()
 
