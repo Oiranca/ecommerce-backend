@@ -1,6 +1,9 @@
 import Users from '../.././../domine/model/users';
+import Admins from '../.././../domine/model/admins';
+import Employee from '../../../domine/model/employee';
 import roles from '../../../domine/model/roles';
 import bcrypt from 'bcrypt';
+import { idCompany } from '../../../domine/middlewares/auth';
 
 const registerUsers = async (req, res) => {
     try {
@@ -29,19 +32,52 @@ const registerUsers = async (req, res) => {
                 address,
             });
         } else if (route === '/admin/admin-register') {
-            await Users.create({
+            await Admins.create({
                 name,
                 surnames,
                 password: hash,
                 identification,
                 email,
                 phone,
-                role: roles.client,
+                role: roles.admin,
                 address,
             });
         }
 
-        res.send({ status: 'Ok', message: 'Admin Create' });
+        res.send({ status: 'Ok', message: 'Client Create' });
+    } catch (e) {
+        res.status(500).send({ status: 'Error', message: e });
+    }
+};
+
+const registerEmployee = async (req, res) => {
+    try {
+        console.log(idCompany());
+        const {
+            name,
+            surnames,
+            password,
+            identification,
+            email,
+            phone,
+            companyID,
+            address,
+        } = req.body;
+
+        const hash = await bcrypt.hash(password, 15);
+
+        await Employee.create({
+            name,
+            surnames,
+            password: hash,
+            identification,
+            email,
+            phone,
+            companyID,
+            address,
+        });
+
+        res.send({ status: 'Ok', message: 'Employee Create' });
     } catch (e) {
         res.status(500).send({ status: 'Error', message: e });
     }
@@ -49,4 +85,5 @@ const registerUsers = async (req, res) => {
 
 export default {
     registerUsers,
+    registerEmployee,
 };

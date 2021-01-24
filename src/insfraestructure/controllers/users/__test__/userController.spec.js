@@ -1,4 +1,4 @@
-//import { createUsers } from '../insfraestructure/controllers/userController';
+//import { createUsers } from '../insfraestructure/controllers/usersController';
 
 describe('createUsers()', () => {
     it('should create a new user', () => {

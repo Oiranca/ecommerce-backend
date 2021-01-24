@@ -1,4 +1,5 @@
-import Users from '../.././../domine/model/users';
+import Client from '../.././../domine/model/users';
+import Admins from '../.././../domine/model/admins';
 import bcrypt from 'bcrypt';
 import { services } from '../../../domine/service/loginServices';
 
@@ -6,7 +7,7 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await Users.findOne({ email });
+        const user = await Client.findOne({ email });
 
         if (user) {
             const isCorrectPassword = await bcrypt.compare(password, user.password);
@@ -23,10 +24,39 @@ const login = async (req, res) => {
             } else {
                 res.send({ status: 401, message: 'User not found' });
             }
+        } else {
+            res.send({ status: 401, message: 'User not found' });
+        }
+    } catch (err) {
+        res.send({ status: 401, message: 'User not found' });
+    }
+};
+const loginAdmin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const admin = await Admins.findOne({ email });
+
+        if (admin) {
+            const isCorrectPassword = await bcrypt.compare(password, admin.password);
+            if (isCorrectPassword) {
+                const userLogin = {
+                    email: admin.email,
+                    password: admin.password,
+                    role: admin.role,
+                };
+                await res.send({
+                    status: '200',
+                    token: services.loginServices(userLogin),
+                });
+            } else {
+                res.send({ status: 401, message: 'Admin not found' });
+            }
+        } else {
+            res.send({ status: 401, message: 'User not found' });
         }
     } catch (err) {
         res.send({ status: 401, message: 'User not found' });
     }
 };
 
-export default { login };
+export default { login, loginAdmin };
