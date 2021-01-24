@@ -12,7 +12,8 @@ const providerRegister = async (req, res) => {
             phone,
             role: roles.provider,
             address,
-        });
+        }),
+            { collection: 'Providers' };
         res.send({ status: 'ok', message: 'Provider created' });
     } catch (e) {
         res.status(500).send({ status: 'Error', message: e });

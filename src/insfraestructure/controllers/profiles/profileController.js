@@ -3,7 +3,6 @@ import Users from '../../../domine/model/users';
 const findProfile = async (req, res) => {
     try {
         const findByEmail = await Users.findOne({ email: req.body.email });
-
         res.send({
             status: '200',
             data: {
