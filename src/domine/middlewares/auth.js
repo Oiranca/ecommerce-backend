@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import Employee from '../model/employee';
+import Admin from '../model/admins';
 
 const isCorrectHost = (req, res, next) => {
     const validHost = req.hostname;
@@ -31,11 +33,6 @@ const checkAuth = (req, res, next) => {
     }
 };
 
-//  admin: 1,
-//     employee: 2,
-//     client: 3,
-//     provider: 4,
-
 const isAdmin = (req, res, next) => {
     try {
         const tokenUser = req.headers['token-users'];
@@ -64,5 +61,61 @@ const isAdmin = (req, res, next) => {
         res.send({ status: 403, message: e.message });
     }
 };
+const existAsEmployee = async (req, res, next) => {
+    try {
+        const { email, identification } = req.body;
+        if (email) {
+            const findEmailExist = await Employee.findOne({ email: email });
+            const findIdentificationExist = await Employee.findOne({
+                identification: identification,
+            });
+            if (!findEmailExist && !findIdentificationExist) {
+                next();
+            } else {
+                throw {
+                    code: 403,
+                    status: 'ACCESS_DENIED',
+                    message: 'EXIST INTO DATABASE',
+                };
+            }
+        } else {
+            throw {
+                code: 403,
+                status: 'ACCESS_DENIED',
+                message: 'NOT CORRECT TOKEN',
+            };
+        }
+    } catch (e) {
+        res.send({ status: 403, message: e.message });
+    }
+};
+const existAsAdmin = async (req, res, next) => {
+    try {
+        const { email, identification } = req.body;
+        if (email) {
+            const findEmailExist = await Admin.findOne({ email: email });
+            const findIdentificationExist = await Admin.findOne({
+                identification: identification,
+            });
+            if (!findEmailExist && !findIdentificationExist) {
+                next();
+            } else {
+                throw {
+                    code: 403,
+                    status: 'ACCESS_DENIED',
+                    message: 'EXIST INTO DATABASE',
+                };
+            }
+        } else {
+            throw {
+                code: 403,
+                status: 'ACCESS_DENIED',
+                message: 'NOT CORRECT TOKEN',
+            };
+        }
+    } catch (e) {
+        res.send({ status: 403, message: e.message });
+    }
+};
 
-export { checkAuth, isCorrectHost, isAdmin };
+export { checkAuth, isCorrectHost, isAdmin, existAsEmployee, existAsAdmin };
