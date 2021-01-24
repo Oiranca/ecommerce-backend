@@ -65,34 +65,4 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-const idCompany = (req, res) => {
-    try {
-        const tokenUser = req.headers['token-users'];
-        if (tokenUser) {
-            const { role, email } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
-            req.session = {
-                role,
-                email,
-            };
-            if (role === '1') {
-                res.send({ status: 200, data: req.session.email });
-            } else {
-                throw {
-                    code: 403,
-                    status: 'ACCESS_DENIED',
-                    message: 'ROLE NOT CORRECT',
-                };
-            }
-        } else {
-            throw {
-                code: 403,
-                status: 'ACCESS_DENIED',
-                message: ' TOKEN NOT CORRECT',
-            };
-        }
-    } catch (e) {
-        res.send({ status: 403, message: e.message });
-    }
-};
-
-export { checkAuth, isCorrectHost, isAdmin, idCompany };
+export { checkAuth, isCorrectHost, isAdmin };

@@ -4,6 +4,7 @@ import Employee from '../../../domine/model/employee';
 import roles from '../../../domine/model/roles';
 import bcrypt from 'bcrypt';
 import { idCompany } from '../../../domine/middlewares/auth';
+import jwt from 'jsonwebtoken';
 
 const registerUsers = async (req, res) => {
     try {
@@ -52,7 +53,6 @@ const registerUsers = async (req, res) => {
 
 const registerEmployee = async (req, res) => {
     try {
-        console.log(idCompany());
         const {
             name,
             surnames,
@@ -60,9 +60,26 @@ const registerEmployee = async (req, res) => {
             identification,
             email,
             phone,
-            companyID,
             address,
         } = req.body;
+        let idCompany;
+        const tokenUser = req.headers['token-users'];
+
+        if (tokenUser) {
+            const { email } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
+            req.session = {
+                email,
+            };
+            const adminId = await Admins.findOne({ email: req.session.email });
+            idCompany = adminId._id;
+            console.log(idCompany);
+        } else {
+            throw {
+                code: 403,
+                status: 'ACCESS_DENIED',
+                message: ' TOKEN NOT CORRECT',
+            };
+        }
 
         const hash = await bcrypt.hash(password, 15);
 
@@ -73,7 +90,8 @@ const registerEmployee = async (req, res) => {
             identification,
             email,
             phone,
-            companyID,
+            companyID: idCompany,
+            role: roles.employee,
             address,
         });
 
