@@ -1,5 +1,4 @@
 import express from 'express';
-
 import usersController from '../controllers/users/usersController';
 import productController from '../controllers/product/productController';
 import providerController from '../controllers/provider/providerController';
@@ -48,22 +47,13 @@ userRouters.get(
     checkAuth,
     profileController.findEmployeeProfile,
 );
-//
-// //routers.get()
-//
-// userRouters.get(
-//     '/admin/profile',
-//     isCorrectHost,
-//     checkAuth,
-//     isAdmin,
-//     profileController.findProfile,
-// );
-// userRouters.get(
-//     '/provider/profile',
-//     isCorrectHost,
-//     checkAuth,
-//     isAdmin,
-//     profileController.findProfile,
-// );
+
+userRouters.get(
+    '/admin/profile',
+    isCorrectHost,
+    checkAuth,
+    isAdmin,
+    profileController.findAdminProfile,
+);
 
 export default userRouters;
