@@ -45,7 +45,7 @@ const registerUsers = async (req, res) => {
             });
         }
 
-        res.send({ status: 'Ok', message: 'Client Create' });
+        res.send({ status: 'Ok', message: 'User Create' });
     } catch (e) {
         res.status(500).send({ status: 'Error', message: e });
     }
