@@ -49,10 +49,12 @@ userRouters.post(
 );
 
 userRouters.get('/profile', isCorrectHost, checkAuth, profileController.findUsersProfile);
+
 userRouters.get(
     '/employee/profile',
     isCorrectHost,
     checkAuth,
+
     profileController.findEmployeeProfile,
 );
 

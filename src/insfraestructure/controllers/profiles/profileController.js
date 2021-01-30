@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import Admins from '../../../domine/model/admins';
 import roles from '../../../domine/model/roles';
 
+
 const findUsersProfile = async (req, res) => {
     try {
         const tokenUser = req.headers['token-users'];
@@ -90,6 +91,7 @@ const findEmployeeProfile = async (req, res) => {
                     },
                 });
             }
+
         } else {
             throw {
                 code: 403,
