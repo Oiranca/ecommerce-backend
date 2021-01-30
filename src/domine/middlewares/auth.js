@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import Employee from '../model/employee';
 import Admin from '../model/admins';
+import roles from '../model/roles';
 
 const isCorrectHost = (req, res, next) => {
     const validHost = req.hostname;
@@ -41,7 +42,7 @@ const isAdmin = (req, res, next) => {
             req.session = {
                 role,
             };
-            if (role === '1') {
+            if (role === roles.admin) {
                 next();
             } else {
                 throw {
