@@ -72,12 +72,11 @@ const registerEmployee = async (req, res) => {
             };
             const adminId = await Admins.findOne({ email: req.session.email });
             idCompany = adminId._id;
-            console.log(idCompany);
         } else {
             throw {
                 code: 403,
                 status: 'ACCESS_DENIED',
-                message: ' TOKEN NOT CORRECT',
+                message: ' ROLE NOT CORRECT',
             };
         }
 
@@ -97,7 +96,7 @@ const registerEmployee = async (req, res) => {
 
         res.send({ status: 'Ok', message: 'Employee Create' });
     } catch (e) {
-        res.status(500).send({ status: 'Error', message: e });
+        res.status(500).send({ status: 'Error', message: e.message });
     }
 };
 

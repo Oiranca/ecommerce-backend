@@ -40,11 +40,21 @@ userRouters.post('/login', isCorrectHost, loginController.login);
 userRouters.post('/company/login', isCorrectHost, loginController.loginAdmin);
 
 // Profile Routes
+userRouters.post(
+    '/admin/employee-profile',
+    isCorrectHost,
+    checkAuth,
+    isAdmin,
+    profileController.findEmployeeProfile,
+);
+
 userRouters.get('/profile', isCorrectHost, checkAuth, profileController.findUsersProfile);
+
 userRouters.get(
     '/employee/profile',
     isCorrectHost,
     checkAuth,
+
     profileController.findEmployeeProfile,
 );
 
