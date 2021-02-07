@@ -179,17 +179,31 @@ const updateUsersProfile = async (req, res) => {
                                 findByEmail.password,
                             );
                             if (!isSamePassword) {
-                                dataToUpdate.password = dataIntoBody['password'];
+                                const hash = await bcrypt.hash(
+                                    dataIntoBody['password'],
+                                    15,
+                                );
+                                await Admins.findOneAndUpdate(
+                                    { _id: idToUpdate },
+                                    { password: hash },
+                                );
                             }
                             break;
+
                         case 'email':
-                            if (dataIntoBody.email !== findByEmail.email) {
+                            if (
+                                dataIntoBody.email !== findByEmail.email &&
+                                dataIntoBody.email !== ''
+                            ) {
                                 const findDataExist = await Client.findOne({
                                     email: dataIntoBody.email,
                                 });
 
                                 if (!findDataExist) {
-                                    dataToUpdate.email = dataIntoBody['email'];
+                                    await Admins.findOneAndUpdate(
+                                        { _id: idToUpdate },
+                                        { email: dataIntoBody['email'] },
+                                    );
                                 } else {
                                     throw {
                                         code: 409,
@@ -200,13 +214,19 @@ const updateUsersProfile = async (req, res) => {
                             }
                             break;
                         case 'phone':
-                            if (dataIntoBody.phone !== findByEmail.phone) {
+                            if (
+                                dataIntoBody.phone !== findByEmail.phone &&
+                                dataIntoBody.phone !== ''
+                            ) {
                                 const findDataExist = await Client.findOne({
                                     phone: dataIntoBody.phone,
                                 });
 
                                 if (!findDataExist) {
-                                    dataToUpdate.phone = dataIntoBody['phone'];
+                                    await Admins.findOneAndUpdate(
+                                        { _id: idToUpdate },
+                                        { phone: dataIntoBody['phone'] },
+                                    );
                                 } else {
                                     throw {
                                         code: 409,
