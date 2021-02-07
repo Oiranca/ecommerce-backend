@@ -170,7 +170,6 @@ const updateUsersProfile = async (req, res) => {
                     email: req.session.email,
                 }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
                 const idToUpdate = findByEmail['_id'];
-                // let dataToUpdate;
                 const bodyKeys = Object.keys(dataIntoBody);
                 for (let keys of bodyKeys) {
                     switch (keys) {
@@ -226,35 +225,68 @@ const updateUsersProfile = async (req, res) => {
                                     findByEmail.address[addressItems]
                                 ) {
                                     switch (addressItems) {
-                                        case 'street': {
-                                            dataToUpdate.address.street =
-                                                dataIntoBody.address[addressItems];
+                                        case 'street':
+                                            await Admins.findOneAndUpdate(
+                                                { _id: idToUpdate },
+                                                {
+                                                    $set: {
+                                                        'address.street':
+                                                            dataIntoBody.address[
+                                                                'street'
+                                                            ],
+                                                    },
+                                                },
+                                            );
 
                                             break;
-                                        }
-                                        case 'numberStreet': {
-                                            dataToUpdate.address.numberStreet =
-                                                dataIntoBody.address[addressItems];
+
+                                        case 'numberStreet':
+                                            await Admins.findOneAndUpdate(
+                                                { _id: idToUpdate },
+                                                {
+                                                    $set: {
+                                                        'address.numberStreet':
+                                                            dataIntoBody.address[
+                                                                'numberStreet'
+                                                            ],
+                                                    },
+                                                },
+                                            );
                                             break;
-                                        }
-                                        case 'level': {
-                                            dataToUpdate.address.level =
-                                                dataIntoBody.address[addressItems];
+
+                                        case 'level':
+                                            await Admins.findOneAndUpdate(
+                                                { _id: idToUpdate },
+                                                {
+                                                    $set: {
+                                                        'address.level':
+                                                            dataIntoBody.address['level'],
+                                                    },
+                                                },
+                                            );
                                             break;
-                                        }
-                                        case 'postalCode': {
-                                            dataToUpdate.address.postalCode =
-                                                dataIntoBody.address[addressItems];
+
+                                        case 'postalCode':
+                                            await Admins.findOneAndUpdate(
+                                                { _id: idToUpdate },
+                                                {
+                                                    $set: {
+                                                        'address.postalCode':
+                                                            dataIntoBody.address[
+                                                                'postalCode'
+                                                            ],
+                                                    },
+                                                },
+                                            );
                                             break;
-                                        }
                                     }
                                 }
                             }
+                            break;
                     }
                 }
+                res.send({ status: '200', message: 'Profile update' });
             }
-
-            res.send({ status: '200', message: 'Profile update' });
         } else {
             throw {
                 code: 403,
