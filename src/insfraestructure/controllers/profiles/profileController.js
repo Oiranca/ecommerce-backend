@@ -152,20 +152,7 @@ const updateUsersProfile = async (req, res) => {
 
             const dataIntoBody = req.body;
 
-            // TODO: Primero comprobar lo que cambia con los campos que no estén vacíos, luego si el email
-            //  y el telefono existen pues no actualizar nada y si no es así solamente actualizar los campos que cambian
             if (dataIntoBody) {
-                let dataToUpdate = {
-                    password: '',
-                    email: '',
-                    phone: '',
-                    address: {
-                        street: '',
-                        numberStreet: '',
-                        level: '',
-                        postalCode: '',
-                    },
-                };
                 const findByEmail = await Admins.findOne({
                     email: req.session.email,
                 }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
@@ -242,7 +229,8 @@ const updateUsersProfile = async (req, res) => {
                             for (let addressItems of addressKeys) {
                                 if (
                                     dataIntoBody.address[addressItems] !==
-                                    findByEmail.address[addressItems]
+                                        findByEmail.address[addressItems] &&
+                                    dataIntoBody.address[addressItems] !== ''
                                 ) {
                                     switch (addressItems) {
                                         case 'street':
