@@ -3,7 +3,8 @@ import Employee from '../../../domine/model/employee';
 import jwt from 'jsonwebtoken';
 import Admins from '../../../domine/model/admins';
 import roles from '../../../domine/model/roles';
-
+import bcrypt from 'bcrypt';
+import { updateProfile } from './updateProfileController';
 
 const findUsersProfile = async (req, res) => {
     try {
@@ -91,7 +92,6 @@ const findEmployeeProfile = async (req, res) => {
                     },
                 });
             }
-
         } else {
             throw {
                 code: 403,
@@ -141,8 +141,105 @@ const findAdminProfile = async (req, res) => {
     }
 };
 
+const usersUpdateProfile = async (req, res) => {
+    const tokenUser = req.headers['token-users'];
+
+    if (tokenUser) {
+        const { email, role } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
+        req.session = {
+            email,
+            role,
+        };
+
+        const dataIntoBody = req.body;
+        let findByEmail;
+        if (dataIntoBody) {
+            switch (req.session.role) {
+                case '1':
+                    findByEmail = await Admins.findOne({
+                        email: req.session.email,
+                    }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                    break;
+                case '2':
+                    findByEmail = await Employee.findOne({
+                        email: req.session.email,
+                    }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                    break;
+                case '3':
+                    findByEmail = await Client.findOne({
+                        email: req.session.email,
+                    }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                    break;
+            }
+
+            await findUserInDataBase(
+                dataIntoBody,
+                findByEmail,
+                req.session.role,
+                req,
+                res,
+            );
+        }
+    } else {
+        throw {
+            code: 403,
+            status: 'ACCESS_DENIED',
+            message: ' TOKEN NOT CORRECT',
+        };
+    }
+};
+
+const findUserInDataBase = async (dataIntoBody, findByEmail, role, req, res) => {
+    try {
+        for (let keys of Object.keys(dataIntoBody)) {
+            switch (keys) {
+                case 'password':
+                    const isSamePassword = await bcrypt.compare(
+                        dataIntoBody.password,
+                        findByEmail.password,
+                    );
+                    if (!isSamePassword) {
+                        const hash = await bcrypt.hash(dataIntoBody['password'], 15);
+                        await updateProfile.passwordUpdate(findByEmail, hash, role);
+                    }
+                    break;
+
+                case 'email':
+                    if (
+                        dataIntoBody.email !== findByEmail.email &&
+                        dataIntoBody.email !== ''
+                    ) {
+                        await emailUpdate(dataIntoBody, findByEmail, role);
+                    }
+                    break;
+                case 'phone':
+                    if (
+                        dataIntoBody.phone !== findByEmail.phone &&
+                        dataIntoBody.phone !== ''
+                    ) {
+                        await updateProfile.phoneUpdate(dataIntoBody, findByEmail, role);
+                    }
+                    break;
+                case 'address':
+                    const addressKeys = Object.keys(dataIntoBody['address']);
+                    await updateProfile.addressUpdate(
+                        dataIntoBody,
+                        findByEmail,
+                        addressKeys,
+                    );
+
+                    break;
+            }
+        }
+        res.send({ status: '200', message: 'Profile update' });
+    } catch (e) {
+        res.send({ status: '404', message: 'Update not possible' });
+    }
+};
+
 export default {
     findUsersProfile,
     findEmployeeProfile,
     findAdminProfile,
+    usersUpdateProfile,
 };
