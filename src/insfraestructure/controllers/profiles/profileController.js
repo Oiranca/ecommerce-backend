@@ -3,7 +3,7 @@ import Employee from '../../../domine/model/employee';
 import jwt from 'jsonwebtoken';
 import Admins from '../../../domine/model/admins';
 import roles from '../../../domine/model/roles';
-
+import bcrypt from 'bcrypt';
 
 const findUsersProfile = async (req, res) => {
     try {
@@ -91,7 +91,6 @@ const findEmployeeProfile = async (req, res) => {
                     },
                 });
             }
-
         } else {
             throw {
                 code: 403,
@@ -141,8 +140,136 @@ const findAdminProfile = async (req, res) => {
     }
 };
 
+const updateUsersProfile = async (req, res) => {
+    try {
+        const tokenUser = req.headers['token-users'];
+
+        if (tokenUser) {
+            const { email } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
+            req.session = {
+                email,
+            };
+
+            const dataIntoBody = req.body;
+
+            // TODO: Primero comprobar lo que cambia con los campos que no estén vacíos, luego si el email
+            //  y el telefono existen pues no actualizar nada y si no es así solamente actualizar los campos que cambian
+            if (dataIntoBody) {
+                let dataToUpdate = {
+                    password: '',
+                    email: '',
+                    phone: '',
+                    address: {
+                        street: '',
+                        numberStreet: '',
+                        level: '',
+                        postalCode: '',
+                    },
+                };
+                const findByEmail = await Admins.findOne({
+                    email: req.session.email,
+                }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                const idToUpdate = findByEmail['_id'];
+                // let dataToUpdate;
+                const bodyKeys = Object.keys(dataIntoBody);
+                for (let keys of bodyKeys) {
+                    switch (keys) {
+                        case 'password':
+                            const isSamePassword = await bcrypt.compare(
+                                dataIntoBody.password,
+                                findByEmail.password,
+                            );
+                            if (!isSamePassword) {
+                                dataToUpdate.password = dataIntoBody['password'];
+                            }
+                            break;
+                        case 'email':
+                            if (dataIntoBody.email !== findByEmail.email) {
+                                const findDataExist = await Client.findOne({
+                                    email: dataIntoBody.email,
+                                });
+
+                                if (!findDataExist) {
+                                    dataToUpdate.email = dataIntoBody['email'];
+                                } else {
+                                    throw {
+                                        code: 409,
+                                        status: 'CONFLICT',
+                                        message: ' EMAIL EXIST AS OTHER USER',
+                                    };
+                                }
+                            }
+                            break;
+                        case 'phone':
+                            if (dataIntoBody.phone !== findByEmail.phone) {
+                                const findDataExist = await Client.findOne({
+                                    phone: dataIntoBody.phone,
+                                });
+
+                                if (!findDataExist) {
+                                    dataToUpdate.phone = dataIntoBody['phone'];
+                                } else {
+                                    throw {
+                                        code: 409,
+                                        status: 'CONFLICT',
+                                        message: ' PHONE EXIST AS OTHER USER',
+                                    };
+                                }
+                            }
+                            break;
+                        case 'address':
+                            const addressKeys = Object.keys(dataIntoBody['address']);
+
+                            for (let addressItems of addressKeys) {
+                                if (
+                                    dataIntoBody.address[addressItems] !==
+                                    findByEmail.address[addressItems]
+                                ) {
+                                    switch (addressItems) {
+                                        case 'street': {
+                                            dataToUpdate.address.street =
+                                                dataIntoBody.address[addressItems];
+
+                                            break;
+                                        }
+                                        case 'numberStreet': {
+                                            dataToUpdate.address.numberStreet =
+                                                dataIntoBody.address[addressItems];
+                                            break;
+                                        }
+                                        case 'level': {
+                                            dataToUpdate.address.level =
+                                                dataIntoBody.address[addressItems];
+                                            break;
+                                        }
+                                        case 'postalCode': {
+                                            dataToUpdate.address.postalCode =
+                                                dataIntoBody.address[addressItems];
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+
+            res.send({ status: '200', message: 'Profile update' });
+        } else {
+            throw {
+                code: 403,
+                status: 'ACCESS_DENIED',
+                message: ' TOKEN NOT CORRECT',
+            };
+        }
+    } catch (e) {
+        res.send({ status: '404', message: 'Profile not found' });
+    }
+};
+
 export default {
     findUsersProfile,
     findEmployeeProfile,
     findAdminProfile,
+    updateUsersProfile,
 };

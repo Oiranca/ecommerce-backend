@@ -12,6 +12,7 @@ import {
     existAsEmployee,
     existAsAdmin,
 } from '../../domine/middlewares/auth';
+import * as path from 'path';
 
 const userRouters = express.Router();
 
@@ -54,7 +55,6 @@ userRouters.get(
     '/employee/profile',
     isCorrectHost,
     checkAuth,
-
     profileController.findEmployeeProfile,
 );
 
@@ -64,6 +64,30 @@ userRouters.get(
     checkAuth,
     isAdmin,
     profileController.findAdminProfile,
+);
+
+//Update Profile
+
+userRouters.post(
+    '/admin/update-profile',
+    isCorrectHost,
+    checkAuth,
+    isAdmin,
+    profileController.updateUsersProfile,
+);
+
+userRouters.post(
+    '/update-profile',
+    isCorrectHost,
+    checkAuth,
+    profileController.updateUsersProfile,
+);
+
+userRouters.post(
+    '/employee/update-profile',
+    isCorrectHost,
+    checkAuth,
+    profileController.updateUsersProfile,
 );
 
 export default userRouters;
