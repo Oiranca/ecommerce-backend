@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import Admins from '../../../domine/model/admins';
 import roles from '../../../domine/model/roles';
 import bcrypt from 'bcrypt';
+import { updateProfile } from './updateProfileController';
 
 const findUsersProfile = async (req, res) => {
     try {
@@ -140,170 +141,99 @@ const findAdminProfile = async (req, res) => {
     }
 };
 
-const updateUsersProfile = async (req, res) => {
-    try {
-        const tokenUser = req.headers['token-users'];
+const usersUpdateProfile = async (req, res) => {
+    const tokenUser = req.headers['token-users'];
 
-        if (tokenUser) {
-            const { email } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
-            req.session = {
-                email,
-            };
+    if (tokenUser) {
+        const { email, role } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
+        req.session = {
+            email,
+            role,
+        };
 
-            const dataIntoBody = req.body;
-
-            if (dataIntoBody) {
-                const findByEmail = await Admins.findOne({
-                    email: req.session.email,
-                }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
-                const idToUpdate = findByEmail['_id'];
-                const bodyKeys = Object.keys(dataIntoBody);
-                for (let keys of bodyKeys) {
-                    switch (keys) {
-                        case 'password':
-                            const isSamePassword = await bcrypt.compare(
-                                dataIntoBody.password,
-                                findByEmail.password,
-                            );
-                            if (!isSamePassword) {
-                                const hash = await bcrypt.hash(
-                                    dataIntoBody['password'],
-                                    15,
-                                );
-                                await Admins.findOneAndUpdate(
-                                    { _id: idToUpdate },
-                                    { password: hash },
-                                );
-                            }
-                            break;
-
-                        case 'email':
-                            if (
-                                dataIntoBody.email !== findByEmail.email &&
-                                dataIntoBody.email !== ''
-                            ) {
-                                const findDataExist = await Client.findOne({
-                                    email: dataIntoBody.email,
-                                });
-
-                                if (!findDataExist) {
-                                    await Admins.findOneAndUpdate(
-                                        { _id: idToUpdate },
-                                        { email: dataIntoBody['email'] },
-                                    );
-                                } else {
-                                    throw {
-                                        code: 409,
-                                        status: 'CONFLICT',
-                                        message: ' EMAIL EXIST AS OTHER USER',
-                                    };
-                                }
-                            }
-                            break;
-                        case 'phone':
-                            if (
-                                dataIntoBody.phone !== findByEmail.phone &&
-                                dataIntoBody.phone !== ''
-                            ) {
-                                const findDataExist = await Client.findOne({
-                                    phone: dataIntoBody.phone,
-                                });
-
-                                if (!findDataExist) {
-                                    await Admins.findOneAndUpdate(
-                                        { _id: idToUpdate },
-                                        { phone: dataIntoBody['phone'] },
-                                    );
-                                } else {
-                                    throw {
-                                        code: 409,
-                                        status: 'CONFLICT',
-                                        message: ' PHONE EXIST AS OTHER USER',
-                                    };
-                                }
-                            }
-                            break;
-                        case 'address':
-                            const addressKeys = Object.keys(dataIntoBody['address']);
-
-                            for (let addressItems of addressKeys) {
-                                if (
-                                    dataIntoBody.address[addressItems] !==
-                                        findByEmail.address[addressItems] &&
-                                    dataIntoBody.address[addressItems] !== ''
-                                ) {
-                                    switch (addressItems) {
-                                        case 'street':
-                                            await Admins.findOneAndUpdate(
-                                                { _id: idToUpdate },
-                                                {
-                                                    $set: {
-                                                        'address.street':
-                                                            dataIntoBody.address[
-                                                                'street'
-                                                            ],
-                                                    },
-                                                },
-                                            );
-
-                                            break;
-
-                                        case 'numberStreet':
-                                            await Admins.findOneAndUpdate(
-                                                { _id: idToUpdate },
-                                                {
-                                                    $set: {
-                                                        'address.numberStreet':
-                                                            dataIntoBody.address[
-                                                                'numberStreet'
-                                                            ],
-                                                    },
-                                                },
-                                            );
-                                            break;
-
-                                        case 'level':
-                                            await Admins.findOneAndUpdate(
-                                                { _id: idToUpdate },
-                                                {
-                                                    $set: {
-                                                        'address.level':
-                                                            dataIntoBody.address['level'],
-                                                    },
-                                                },
-                                            );
-                                            break;
-
-                                        case 'postalCode':
-                                            await Admins.findOneAndUpdate(
-                                                { _id: idToUpdate },
-                                                {
-                                                    $set: {
-                                                        'address.postalCode':
-                                                            dataIntoBody.address[
-                                                                'postalCode'
-                                                            ],
-                                                    },
-                                                },
-                                            );
-                                            break;
-                                    }
-                                }
-                            }
-                            break;
-                    }
-                }
-                res.send({ status: '200', message: 'Profile update' });
+        const dataIntoBody = req.body;
+        let findByEmail;
+        if (dataIntoBody) {
+            switch (req.session.role) {
+                case '1':
+                    findByEmail = await Admins.findOne({
+                        email: req.session.email,
+                    }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                    break;
+                case '2':
+                    findByEmail = await Employee.findOne({
+                        email: req.session.email,
+                    }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                    break;
+                case '3':
+                    findByEmail = await Client.findOne({
+                        email: req.session.email,
+                    }).select({ _id: 1, password: 1, email: 1, phone: 1, address: 1 });
+                    break;
             }
-        } else {
-            throw {
-                code: 403,
-                status: 'ACCESS_DENIED',
-                message: ' TOKEN NOT CORRECT',
-            };
+
+            await findUserInDataBase(
+                dataIntoBody,
+                findByEmail,
+                req.session.role,
+                req,
+                res,
+            );
         }
+    } else {
+        throw {
+            code: 403,
+            status: 'ACCESS_DENIED',
+            message: ' TOKEN NOT CORRECT',
+        };
+    }
+};
+
+const findUserInDataBase = async (dataIntoBody, findByEmail, role, req, res) => {
+    try {
+        for (let keys of Object.keys(dataIntoBody)) {
+            switch (keys) {
+                case 'password':
+                    const isSamePassword = await bcrypt.compare(
+                        dataIntoBody.password,
+                        findByEmail.password,
+                    );
+                    if (!isSamePassword) {
+                        const hash = await bcrypt.hash(dataIntoBody['password'], 15);
+                        await updateProfile.passwordUpdate(findByEmail, hash, role);
+                    }
+                    break;
+
+                case 'email':
+                    if (
+                        dataIntoBody.email !== findByEmail.email &&
+                        dataIntoBody.email !== ''
+                    ) {
+                        await emailUpdate(dataIntoBody, findByEmail, role);
+                    }
+                    break;
+                case 'phone':
+                    if (
+                        dataIntoBody.phone !== findByEmail.phone &&
+                        dataIntoBody.phone !== ''
+                    ) {
+                        await updateProfile.phoneUpdate(dataIntoBody, findByEmail, role);
+                    }
+                    break;
+                case 'address':
+                    const addressKeys = Object.keys(dataIntoBody['address']);
+                    await updateProfile.addressUpdate(
+                        dataIntoBody,
+                        findByEmail,
+                        addressKeys,
+                    );
+
+                    break;
+            }
+        }
+        res.send({ status: '200', message: 'Profile update' });
     } catch (e) {
-        res.send({ status: '404', message: 'Profile not found' });
+        res.send({ status: '404', message: 'Update not possible' });
     }
 };
 
@@ -311,5 +241,5 @@ export default {
     findUsersProfile,
     findEmployeeProfile,
     findAdminProfile,
-    updateUsersProfile,
+    usersUpdateProfile,
 };

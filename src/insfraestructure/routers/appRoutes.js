@@ -19,6 +19,8 @@ const userRouters = express.Router();
 //Register Routes
 userRouters.post('/user/users-register', usersController.registerUsers);
 userRouters.post('/admin/admin-register', existAsEmployee, usersController.registerUsers);
+
+/*Sólo el administrador puede crear al empleado y al provider*/
 userRouters.post(
     '/employee/employee-register',
     isCorrectHost,
@@ -73,21 +75,21 @@ userRouters.post(
     isCorrectHost,
     checkAuth,
     isAdmin,
-    profileController.updateUsersProfile,
+    profileController.usersUpdateProfile,
 );
 
 userRouters.post(
     '/update-profile',
     isCorrectHost,
     checkAuth,
-    profileController.updateUsersProfile,
+    profileController.usersUpdateProfile,
 );
 
 userRouters.post(
     '/employee/update-profile',
     isCorrectHost,
     checkAuth,
-    profileController.updateUsersProfile,
+    profileController.usersUpdateProfile,
 );
 
 export default userRouters;
