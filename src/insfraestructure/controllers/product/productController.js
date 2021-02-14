@@ -9,7 +9,7 @@ const findProduct = async (req) => {
 
 const createProduct = async (req, res) => {
     try {
-        const { id_Provider, productName, ean, pvd, quantity } = req.body;
+        const { id_Provider, productName, ean, pvd, category, quantity } = req.body;
         const existProduct = await findProduct(req);
 
         if (existProduct) {
@@ -32,11 +32,13 @@ const createProduct = async (req, res) => {
                 productName,
                 ean,
                 pvd,
+                category,
             }).then((product) => {
                 Store.create({
                     id_Product: product._id,
                     id_Provider: product.id_Provider,
                     stock: quantity,
+                    category: product.category,
                 });
             });
         }
@@ -67,7 +69,7 @@ const deleteProduct = async (req, res) => {
                             },
                             { new: true },
                         );
-                        res.send({ status: 'ok', message: 'Product deleted' });
+                        res.send({ status: 'ok', message: 'PRODUCT DELETED' });
                         if (stockController.stock === 0) {
                             await Store.findOneAndDelete({ _id: stocks._id })
                                 .select({
@@ -91,7 +93,23 @@ const deleteProduct = async (req, res) => {
         res.status(500).send({ status: 'Error', message: 'DELETED NOT POSSIBLE' });
     }
 };
+
+const findProducts = async (req, res) => {
+    try {
+        await Products.find(req.body)
+            .select({ __v: 0 })
+            .then((products) => {
+                res.send({
+                    status: 'ok',
+                    data: products,
+                });
+            });
+    } catch (e) {
+        res.status(500).send({ status: 'Error', message: 'PRODUCT NOT FOUND' });
+    }
+};
 export default {
     createProduct,
     deleteProduct,
+    findProducts,
 };

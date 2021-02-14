@@ -42,6 +42,12 @@ userRouters.post(
     middlewares.crudProduct,
     productController.deleteProduct,
 );
+userRouters.post(
+    '/find-product',
+    middlewares.crudProduct,
+    productController.findProducts,
+);
+
 userRouters.post('/store', storeController.registerInStore);
 
 //Login Routes
