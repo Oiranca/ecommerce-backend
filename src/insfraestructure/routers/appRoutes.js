@@ -6,7 +6,6 @@ import storeController from '../controllers/store/storeController';
 import loginController from '../controllers/login/loginController';
 import profileController from '../controllers/profiles/profileController';
 import { middlewares } from '../../domine/middlewares/auth';
-import * as path from 'path';
 
 const userRouters = express.Router();
 
@@ -33,7 +32,11 @@ userRouters.post(
     providerController.providerRegister,
 );
 
-userRouters.post('/products-register', productController.createProduct);
+userRouters.post(
+    '/products-register',
+    middlewares.crudProduct,
+    productController.createProduct,
+);
 userRouters.post('/store', storeController.registerInStore);
 
 //Login Routes

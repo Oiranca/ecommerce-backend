@@ -117,5 +117,33 @@ const middleware = {
             res.send({ status: 403, message: e.message });
         }
     },
+    crudProduct: (req, res, next) => {
+        try {
+            const tokenUser = req.headers['token-users'];
+            if (tokenUser) {
+                const { role } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
+                req.session = {
+                    role,
+                };
+                if (role === roles.admin || role === roles.employee) {
+                    next();
+                } else {
+                    throw {
+                        code: 403,
+                        status: 'ACCESS_DENIED',
+                        message: 'NOT CORRECT ROLE',
+                    };
+                }
+            } else {
+                throw {
+                    code: 403,
+                    status: 'ACCESS_DENIED',
+                    message: 'NOT CORRECT TOKEN',
+                };
+            }
+        } catch (e) {
+            res.send({ status: 403, message: e.message });
+        }
+    },
 };
 export const middlewares = middleware;
