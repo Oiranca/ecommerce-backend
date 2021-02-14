@@ -209,7 +209,7 @@ const findUserInDataBase = async (dataIntoBody, findByEmail, role, req, res) => 
                         dataIntoBody.email !== findByEmail.email &&
                         dataIntoBody.email !== ''
                     ) {
-                        await emailUpdate(dataIntoBody, findByEmail, role);
+                        await updateProfile.emailUpdate(dataIntoBody, findByEmail, role);
                     }
                     break;
                 case 'phone':
@@ -222,11 +222,32 @@ const findUserInDataBase = async (dataIntoBody, findByEmail, role, req, res) => 
                     break;
                 case 'address':
                     const addressKeys = Object.keys(dataIntoBody['address']);
-                    await updateProfile.addressUpdate(
-                        dataIntoBody,
-                        findByEmail,
-                        addressKeys,
-                    );
+                    switch (role) {
+                        case (role = roles.admin):
+                            await updateProfile.addressUpdate(
+                                dataIntoBody,
+                                findByEmail,
+                                addressKeys,
+                                Admins,
+                            );
+                            break;
+                        case (role = roles.employee):
+                            await updateProfile.addressUpdate(
+                                dataIntoBody,
+                                findByEmail,
+                                addressKeys,
+                                Employee,
+                            );
+                            break;
+                        case (role = roles.client):
+                            await updateProfile.addressUpdate(
+                                dataIntoBody,
+                                findByEmail,
+                                addressKeys,
+                                Client,
+                            );
+                            break;
+                    }
 
                     break;
             }

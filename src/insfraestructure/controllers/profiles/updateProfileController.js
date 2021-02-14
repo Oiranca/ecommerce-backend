@@ -195,7 +195,7 @@ const phoneUpdate = async (dataIntoBody, findByEmail, role) => {
     }
 };
 
-const addressUpdate = async (dataIntoBody, findByEmail, addressKeys) => {
+const addressUpdate = async (dataIntoBody, findByEmail, addressKeys, user) => {
     for (let addressItems of addressKeys) {
         if (
             dataIntoBody.address[addressItems] !== findByEmail.address[addressItems] &&
@@ -203,7 +203,7 @@ const addressUpdate = async (dataIntoBody, findByEmail, addressKeys) => {
         ) {
             switch (addressItems) {
                 case 'street':
-                    await Admins.findOneAndUpdate(
+                    await user.findOneAndUpdate(
                         { _id: findByEmail['_id'] },
                         {
                             $set: {
@@ -215,7 +215,7 @@ const addressUpdate = async (dataIntoBody, findByEmail, addressKeys) => {
                     break;
 
                 case 'numberStreet':
-                    await Admins.findOneAndUpdate(
+                    await user.findOneAndUpdate(
                         { _id: findByEmail['_id'] },
                         {
                             $set: {
@@ -227,7 +227,7 @@ const addressUpdate = async (dataIntoBody, findByEmail, addressKeys) => {
                     break;
 
                 case 'level':
-                    await Admins.findOneAndUpdate(
+                    await user.findOneAndUpdate(
                         { _id: findByEmail['_id'] },
                         {
                             $set: {
@@ -238,7 +238,7 @@ const addressUpdate = async (dataIntoBody, findByEmail, addressKeys) => {
                     break;
 
                 case 'postalCode':
-                    await Admins.findOneAndUpdate(
+                    await user.findOneAndUpdate(
                         { _id: findByEmail['_id'] },
                         {
                             $set: {
