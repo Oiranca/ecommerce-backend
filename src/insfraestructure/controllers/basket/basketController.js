@@ -60,7 +60,8 @@ const basketCrud = async (req, res) => {
                             },
                             total:
                                 sellActive.total +
-                                (productToSell.pvd * taxes.IGIC + productToSell.pvd),
+                                (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
+                                    quantity,
                         },
                     );
                 } else {
@@ -69,9 +70,11 @@ const basketCrud = async (req, res) => {
                         basket_products: {
                             id_product: productToSell._id,
                             quantity: quantity,
-                            pvp: productToSell.pvd * taxes.IGIC,
+                            pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
                         },
-                        total: productToSell.pvd * taxes.IGIC,
+                        total:
+                            (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
+                            quantity,
                     });
                 }
 
