@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose';
 
 const basketModel = new Schema({
     id_client: { type: String, required: true },
-    id_employee: { type: String, required: true, default: 'ONLINE' },
+    id_employee: { type: String, required: true },
     basket_products: {
         type: [
             {

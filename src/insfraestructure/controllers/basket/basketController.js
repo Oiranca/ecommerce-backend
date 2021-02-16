@@ -1,10 +1,76 @@
 import Basket from '../../../domine/model/basket';
+import Admins from '../../../domine/model/admins';
 import Employee from '../../../domine/model/employee';
 import Users from '../../../domine/model/users';
 import Product from '../../../domine/model/products';
 import roles from '../../../domine/model/roles';
 import jwt from 'jsonwebtoken';
 import taxes from '../../../domine/model/tax';
+
+const insertProductsIntoBasket = async (
+    sellActive,
+    typeOfID,
+    productToSell,
+    quantity,
+    res,
+    userCredential,
+) => {
+    let idShopOnline;
+    let basketProduct;
+    let totalActive;
+    if (typeOfID === 'ONLINE') {
+        for (let shopCredential of sellActive) {
+            if (shopCredential.id_employee === 'ONLINE') {
+                idShopOnline = shopCredential._id;
+                basketProduct = shopCredential.basket_products;
+                totalActive = shopCredential.total;
+            }
+        }
+    } else {
+        for (let shopCredential of sellActive) {
+            if (shopCredential.id_employee === typeOfID._id.toString()) {
+                idShopOnline = shopCredential._id;
+                basketProduct = shopCredential.basket_products;
+                totalActive = shopCredential.total;
+            }
+        }
+    }
+
+    if (idShopOnline) {
+        await Basket.findByIdAndUpdate(
+            { _id: idShopOnline._id },
+            {
+                $set: {
+                    basket_products: [
+                        ...basketProduct,
+                        {
+                            id_product: productToSell._id,
+                            quantity: quantity,
+                            pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
+                        },
+                    ],
+                },
+                total:
+                    totalActive +
+                    (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
+            },
+        );
+        res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+    } else {
+        console.log('no existe');
+        await Basket.create({
+            id_employee: typeOfID !== 'ONLINE' ? typeOfID._id : typeOfID,
+            id_client: userCredential._id,
+            basket_products: {
+                id_product: productToSell._id,
+                quantity: quantity,
+                pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
+            },
+            total: (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
+        });
+        res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+    }
+};
 
 const basketCrud = async (req, res) => {
     const findSellActive = async (userCredential) => {
@@ -22,9 +88,6 @@ const basketCrud = async (req, res) => {
         const tokenUser = req.headers['token-users'];
         let userCredential;
         let sellActive;
-        let idShopOnline;
-        let basketProduct;
-        let totalActive;
 
         const { email, role } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
         req.session = {
@@ -39,7 +102,22 @@ const basketCrud = async (req, res) => {
 
         switch (role) {
             case roles.admin:
-                console.log('entrando como administrador');
+                const adminCredential = await Admins.findOne({
+                    email: req.session.email,
+                }).select({ _id: 1 });
+                userCredential = await Users.findOne({
+                    identification: clientIdentification,
+                }).select({ _id: 1 });
+
+                sellActive = await findSellActive(userCredential);
+                await insertProductsIntoBasket(
+                    sellActive,
+                    adminCredential,
+                    productToSell,
+                    quantity,
+                    res,
+                    userCredential,
+                );
                 break;
             case roles.employee:
                 const employeeCredential = await Employee.findOne({
@@ -50,109 +128,31 @@ const basketCrud = async (req, res) => {
                 }).select({ _id: 1 });
 
                 sellActive = await findSellActive(userCredential);
-
-                for (let shopCredential of sellActive) {
-                    if (
-                        shopCredential.id_employee === employeeCredential._id.toString()
-                    ) {
-                        idShopOnline = shopCredential._id;
-                        basketProduct = shopCredential.basket_products;
-                        totalActive = shopCredential.total;
-                    }
-                }
-
-                if (idShopOnline) {
-                    await Basket.findByIdAndUpdate(
-                        { _id: idShopOnline._id },
-                        {
-                            $set: {
-                                basket_products: [
-                                    ...basketProduct,
-                                    {
-                                        id_product: productToSell._id,
-                                        quantity: quantity,
-                                        pvp:
-                                            productToSell.pvd * taxes.IGIC +
-                                            productToSell.pvd,
-                                    },
-                                ],
-                            },
-                            total:
-                                totalActive +
-                                (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
-                                    quantity,
-                        },
-                    );
-                    res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
-                } else {
-                    await Basket.create({
-                        id_employee: employeeCredential._id,
-                        id_client: userCredential._id,
-                        basket_products: {
-                            id_product: productToSell._id,
-                            quantity: quantity,
-                            pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
-                        },
-                        total:
-                            (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
-                            quantity,
-                    });
-                    res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
-                }
+                await insertProductsIntoBasket(
+                    sellActive,
+                    employeeCredential,
+                    productToSell,
+                    quantity,
+                    res,
+                    userCredential,
+                );
 
                 break;
             case roles.client:
+                const id_default = 'ONLINE';
                 userCredential = await Users.findOne({
                     email: req.session.email,
                 }).select({ _id: 1 });
 
                 sellActive = await findSellActive(userCredential);
-                for (let shopCredential of sellActive) {
-                    if (shopCredential.id_employee === 'ONLINE') {
-                        idShopOnline = shopCredential._id;
-                        basketProduct = shopCredential.basket_products;
-                        totalActive = shopCredential.total;
-                    }
-                }
-
-                if (idShopOnline) {
-                    await Basket.findByIdAndUpdate(
-                        { _id: idShopOnline._id },
-                        {
-                            $set: {
-                                basket_products: [
-                                    ...basketProduct,
-                                    {
-                                        id_product: productToSell._id,
-                                        quantity: quantity,
-                                        pvp:
-                                            productToSell.pvd * taxes.IGIC +
-                                            productToSell.pvd,
-                                    },
-                                ],
-                            },
-                            total:
-                                totalActive +
-                                (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
-                                    quantity,
-                        },
-                    );
-                } else {
-                    console.log('cliente');
-                    await Basket.create({
-                        id_client: userCredential._id,
-                        basket_products: {
-                            id_product: productToSell._id,
-                            quantity: quantity,
-                            pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
-                        },
-                        total:
-                            (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
-                            quantity,
-                    });
-                }
-
-                res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+                await insertProductsIntoBasket(
+                    sellActive,
+                    id_default,
+                    productToSell,
+                    quantity,
+                    res,
+                    userCredential,
+                );
 
                 break;
         }
