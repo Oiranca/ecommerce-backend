@@ -6,6 +6,7 @@ import storeController from '../controllers/store/storeController';
 import loginController from '../controllers/login/loginController';
 import profileController from '../controllers/profiles/profileController';
 import { middlewares } from '../../domine/middlewares/auth';
+import basketController from '../controllers/basket/basketController';
 
 const userRouters = express.Router();
 
@@ -107,6 +108,14 @@ userRouters.post(
     middlewares.isCorrectHost,
     middlewares.checkAuth,
     profileController.usersUpdateProfile,
+);
+
+//Basket Route
+userRouters.post(
+    '/basket',
+    middlewares.isCorrectHost,
+    middlewares.checkAuth,
+    basketController.basketCrud,
 );
 
 export default userRouters;
