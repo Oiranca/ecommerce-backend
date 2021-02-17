@@ -1,31 +1,3 @@
-/*
-### Impuestos
-
-| Nombre Atributo |  Tipo   | Obligatoriedad                               |
-|:---------------:|:-------:| -------------------------------------------- |
-|       Id        | Mongodb | No puede ser null/undefined y debe ser único |
-|     Nombre      | String  | No puede ser null/undefined y debe ser único |
-|      Valor      | Number  | No puede ser null/undefined                  |
-
-
-### Factura_Ventas
-
-|   Nombre Atributo    |  Tipo   |                                Obligatoriedad                                 |
-|:--------------------:|:-------:|:-----------------------------------------------------------------------------:|
-|          Id          | Mongodb |                 No puede ser null/undefined y debe ser único                  |
-|     Id_Vendedor      | String  | No puede ser null/undefined sólo puede facturar el adminitrador o el vendedor |
-|    Id_Modificador    | String  |   No puede ser null/undefined se guarda el último que la modifico o realizó   |
-|     Id_Producto      | String  |                          No puede ser null/undefined                          |
-|      Id_Cliente      | String  |                          No puede ser null/undefined                          |
-|    Número_Factura    | Number  |           No puede ser null/undefined debe ser correlativo y único            |
-|    Estado_Factura    | Boolean |              No puede ser null/undefined (Devuelta o Nodevuelta)              |
-|        Fecha         |  Date   |                          No puede ser null/undefined                          |
-|  Unidades_Vendidas   | Number  |                          No puede ser null/undefined                          |
-|  Impuesto_Aplicado   | String  |                          No puede ser null/undefined                          |
-|     Precio_Venta     | Number  |                          No puede ser null/undefined                          |
-|      Descuento       | Boolean |                           Puede ser null/undefined                            |
-| Porcentaje_Descuento | Number  |                           Puede ser null/undefined                            |
-* */
 import { Schema, model } from 'mongoose';
 
 const billsModel = new Schema({

@@ -39,7 +39,7 @@ const insertProductsIntoBasket = async (
 
     if (idShopOnline) {
         if (Math.abs(totalQuantity) <= totalActive) {
-            await Basket.findByIdAndUpdate(
+            const controlBasket = await Basket.findByIdAndUpdate(
                 { _id: idShopOnline._id },
                 {
                     $set: {
@@ -56,8 +56,12 @@ const insertProductsIntoBasket = async (
                         totalActive +
                         (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
                 },
+                { new: true },
             );
             res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+            if (controlBasket.total === 0) {
+                await Basket.findByIdAndDelete({ _id: idShopOnline._id });
+            }
         } else {
             res.status(500).send({ status: 'Error', message: 'ERROR FOR BASKET CREATE' });
         }
