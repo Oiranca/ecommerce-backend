@@ -3,7 +3,6 @@ import Admins from '../.././../domine/model/admins';
 import Employee from '../../../domine/model/employee';
 import roles from '../../../domine/model/roles';
 import bcrypt from 'bcrypt';
-import { idCompany } from '../../../domine/middlewares/auth';
 import jwt from 'jsonwebtoken';
 
 const registerUsers = async (req, res) => {
