@@ -18,6 +18,7 @@ const insertProductsIntoBasket = async (
     let idShopOnline;
     let basketProduct;
     let totalActive;
+    const totalQuantity = (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity;
     if (typeOfID === 'ONLINE') {
         for (let shopCredential of sellActive) {
             if (shopCredential.id_employee === 'ONLINE') {
@@ -37,38 +38,45 @@ const insertProductsIntoBasket = async (
     }
 
     if (idShopOnline) {
-        await Basket.findByIdAndUpdate(
-            { _id: idShopOnline._id },
-            {
-                $set: {
-                    basket_products: [
-                        ...basketProduct,
-                        {
-                            id_product: productToSell._id,
-                            quantity: quantity,
-                            pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
-                        },
-                    ],
+        if (Math.abs(totalQuantity) <= totalActive) {
+            await Basket.findByIdAndUpdate(
+                { _id: idShopOnline._id },
+                {
+                    $set: {
+                        basket_products: [
+                            ...basketProduct,
+                            {
+                                id_product: productToSell._id,
+                                quantity: quantity,
+                                pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
+                            },
+                        ],
+                    },
+                    total:
+                        totalActive +
+                        (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
                 },
-                total:
-                    totalActive +
-                    (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
-            },
-        );
-        res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+            );
+            res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+        } else {
+            res.status(500).send({ status: 'Error', message: 'ERROR FOR BASKET CREATE' });
+        }
     } else {
-        console.log('no existe');
-        await Basket.create({
-            id_employee: typeOfID !== 'ONLINE' ? typeOfID._id : typeOfID,
-            id_client: userCredential._id,
-            basket_products: {
-                id_product: productToSell._id,
-                quantity: quantity,
-                pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
-            },
-            total: (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
-        });
-        res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+        if (totalQuantity > 0) {
+            await Basket.create({
+                id_employee: typeOfID !== 'ONLINE' ? typeOfID._id : typeOfID,
+                id_client: userCredential._id,
+                basket_products: {
+                    id_product: productToSell._id,
+                    quantity: quantity,
+                    pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
+                },
+                total: (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
+            });
+            res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+        } else {
+            res.status(500).send({ status: 'Error', message: 'ERROR FOR BASKET CREATE' });
+        }
     }
 };
 
