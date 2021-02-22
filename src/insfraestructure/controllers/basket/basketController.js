@@ -15,58 +15,122 @@ const insertProductsIntoBasket = async (
     res,
     userCredential,
 ) => {
-    let idShopOnline;
-    let basketProduct;
-    let totalActive;
-    const totalQuantity = (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity;
+    let idShopOnline = '';
+    let basketProduct = '';
+    let totalActive = '';
+    let quantityActive = '';
+    let idProductActive = '';
+    let findProductActive = '';
+    const findIntoBasketActive = (shopCredential) => {
+        findProductActive = shopCredential.basket_products.filter(
+            (itemsActive) => itemsActive.id_product === productToSell._id.toString(),
+        );
+        idShopOnline = shopCredential._id;
+        idProductActive = findProductActive.map((idIntoBasket) => idIntoBasket._id);
+        basketProduct = shopCredential.basket_products;
+        totalActive = shopCredential.total;
+        quantityActive = findProductActive.map((itemsIntoBasket) => {
+            if (itemsIntoBasket.id_product === productToSell._id.toString()) {
+                return Number(itemsIntoBasket.quantity);
+            }
+        });
+        findProductActive.map((itemsToModify) => {
+            if (itemsToModify.id_product === productToSell._id.toString()) {
+                for (let index in basketProduct) {
+                    if (
+                        basketProduct[index].id_product === productToSell._id.toString()
+                    ) {
+                        if (quantity > 0) {
+                            basketProduct[index].quantity =
+                                Number(quantityActive) + quantity;
+                            return basketProduct;
+                        } else if (
+                            basketProduct[index].quantity - Math.abs(quantity) >
+                            0
+                        ) {
+                            basketProduct[index].quantity =
+                                Number(quantityActive) + quantity;
+                            return basketProduct;
+                        } else {
+                            basketProduct.splice(index, 1);
+                        }
+                    }
+                }
+            }
+        });
+        return {
+            findProductActive,
+            idShopOnline,
+            idProductActive,
+            basketProduct,
+            totalActive,
+            quantityActive,
+        };
+    };
     if (typeOfID === 'ONLINE') {
         for (let shopCredential of sellActive) {
             if (shopCredential.id_employee === 'ONLINE') {
-                idShopOnline = shopCredential._id;
-                basketProduct = shopCredential.basket_products;
-                totalActive = shopCredential.total;
+                findIntoBasketActive(shopCredential);
             }
         }
     } else {
         for (let shopCredential of sellActive) {
             if (shopCredential.id_employee === typeOfID._id.toString()) {
-                idShopOnline = shopCredential._id;
-                basketProduct = shopCredential.basket_products;
-                totalActive = shopCredential.total;
+                findIntoBasketActive(shopCredential);
             }
         }
     }
 
     if (idShopOnline) {
-        if (Math.abs(totalQuantity) <= totalActive) {
-            const controlBasket = await Basket.findByIdAndUpdate(
-                { _id: idShopOnline._id },
+        if (idProductActive.toString()) {
+            const a = await Basket.findOneAndUpdate(
+                {
+                    _id: idShopOnline,
+                },
                 {
                     $set: {
-                        basket_products: [
-                            ...basketProduct,
-                            {
-                                id_product: productToSell._id,
-                                quantity: quantity,
-                                pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
-                            },
-                        ],
+                        basket_products: basketProduct,
                     },
                     total:
                         totalActive +
                         (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
                 },
-                { new: true },
             );
+
             res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
-            if (controlBasket.total === 0) {
-                await Basket.findByIdAndDelete({ _id: idShopOnline._id });
-            }
         } else {
-            res.status(500).send({ status: 'Error', message: 'ERROR FOR BASKET CREATE' });
+            if (quantity > 0) {
+                await Basket.findByIdAndUpdate(
+                    { _id: idShopOnline._id },
+                    {
+                        $set: {
+                            basket_products: [
+                                ...basketProduct,
+                                {
+                                    id_product: productToSell._id,
+                                    quantity: quantity,
+                                    pvp:
+                                        productToSell.pvd * taxes.IGIC +
+                                        productToSell.pvd,
+                                },
+                            ],
+                        },
+                        total:
+                            totalActive +
+                            (productToSell.pvd * taxes.IGIC + productToSell.pvd) *
+                                quantity,
+                    },
+                );
+                res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+            } else {
+                res.status(500).send({
+                    status: 'Error',
+                    message: 'ERROR FOR BASKET CREATE',
+                });
+            }
         }
     } else {
-        if (totalQuantity > 0) {
+        if (quantity > 0) {
             await Basket.create({
                 id_employee: typeOfID !== 'ONLINE' ? typeOfID._id : typeOfID,
                 id_client: userCredential._id,
