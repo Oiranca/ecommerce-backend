@@ -19,7 +19,6 @@ const billsModel = new Schema({
     date: { type: String, required: true },
     date_update: { type: String, required: true },
     tax: { type: Number, required: true },
-    pvp: { type: Number, required: true },
     discount: { type: Number, required: true, default: 0 },
     total: { type: Number, required: true, default: 0 },
 });
