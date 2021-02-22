@@ -7,6 +7,7 @@ import loginController from '../controllers/login/loginController';
 import profileController from '../controllers/profiles/profileController';
 import { middlewares } from '../../domine/middlewares/auth';
 import basketController from '../controllers/basket/basketController';
+import { billsController } from '../controllers/bills/billsController';
 
 const userRouters = express.Router();
 
@@ -116,6 +117,13 @@ userRouters.post(
     middlewares.isCorrectHost,
     middlewares.checkAuth,
     basketController.basketCrud,
+);
+//Bills Route
+userRouters.post(
+    '/bills',
+    middlewares.isCorrectHost,
+    middlewares.checkAuth,
+    billsController.createBills,
 );
 
 export default userRouters;

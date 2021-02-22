@@ -18,12 +18,16 @@ const insertProductsIntoBasket = async (
     let idShopOnline;
     let basketProduct;
     let totalActive;
+    let quantityActive;
     if (typeOfID === 'ONLINE') {
         for (let shopCredential of sellActive) {
             if (shopCredential.id_employee === 'ONLINE') {
                 idShopOnline = shopCredential._id;
                 basketProduct = shopCredential.basket_products;
                 totalActive = shopCredential.total;
+                quantityActive = shopCredential.basket_products.map(
+                    (itemsIntoBasket) => itemsIntoBasket.quantity,
+                );
             }
         }
     } else {
@@ -32,32 +36,49 @@ const insertProductsIntoBasket = async (
                 idShopOnline = shopCredential._id;
                 basketProduct = shopCredential.basket_products;
                 totalActive = shopCredential.total;
+                quantityActive = shopCredential.basket_products.map(
+                    (itemsIntoBasket) => itemsIntoBasket.quantity,
+                );
             }
         }
     }
 
     if (idShopOnline) {
-        await Basket.findByIdAndUpdate(
-            { _id: idShopOnline._id },
+        const productExist = await Basket.findOneAndUpdate(
             {
-                $set: {
-                    basket_products: [
-                        ...basketProduct,
-                        {
-                            id_product: productToSell._id,
-                            quantity: quantity,
-                            pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
-                        },
-                    ],
-                },
+                'basket_products.id_product': productToSell._id.toString(),
+            },
+            {
+                'basket_products.$.quantity': Number(quantityActive) + quantity,
+
                 total:
                     totalActive +
                     (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
             },
-        );
+        ).select({ _id: 0, 'basket_products.pvp': 1, 'basket_products.quantity': 1 });
+
         res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
+
+        // await Basket.findByIdAndUpdate(
+        //     { _id: idShopOnline._id },
+        //     {
+        //         $set: {
+        //             basket_products: [
+        //                 ...basketProduct,
+        //                 {
+        //                     id_product: productToSell._id,
+        //                     quantity: quantity,
+        //                     pvp: productToSell.pvd * taxes.IGIC + productToSell.pvd,
+        //                 },
+        //             ],
+        //         },
+        //         total:
+        //             totalActive +
+        //             (productToSell.pvd * taxes.IGIC + productToSell.pvd) * quantity,
+        //     },
+        // );
+        // res.send({ status: 'Ok', message: 'PRODUCT INTRODUCED' });
     } else {
-        console.log('no existe');
         await Basket.create({
             id_employee: typeOfID !== 'ONLINE' ? typeOfID._id : typeOfID,
             id_client: userCredential._id,
