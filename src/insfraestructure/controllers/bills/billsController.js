@@ -1,66 +1,39 @@
 import Basket from '../../../domine/model/basket';
+import Bills from '../../../domine/model/bills';
 import Admins from '../../../domine/model/admins';
 import Employee from '../../../domine/model/employee';
-import Users from '../../../domine/model/users';
-import Product from '../../../domine/model/products';
 import roles from '../../../domine/model/roles';
 import jwt from 'jsonwebtoken';
 import taxes from '../../../domine/model/tax';
 
-const productsSold = async (basket_products) => {
+const productsSold = async (basket, req, res) => {
     const totalProducts = [];
-    let idRepProduct = [];
 
-    basket_products.map((items) => {
-        const filter = basket_products.filter(
-            (itemsToFind) => itemsToFind.id_product === items.id_product,
-        );
-        filter.map((itemsToFilter) => {
-            const elementToFind = (element) =>
-                element.id_product === itemsToFilter.id_product;
-            const findIndexElement = totalProducts.findIndex(elementToFind);
-            if (findIndexElement === -1) {
-            }
+    basket.basket_products.map((items) => {
+        totalProducts.push({
+            id_product: items.id_product,
+            quantity: items.quantity,
+            pvp: items.pvp,
         });
-        // if (idRepProduct === items.id_product) {
-        //     const elementToFind = (element) => element.id_product === items.id_product;
-        //     const findIndexElement = totalProducts.findIndex(elementToFind);
-        //     totalProducts[findIndexElement].pvp =
-        //         totalProducts[findIndexElement].pvp + items.pvp * items.quantity;
-        //     totalProducts[findIndexElement].quantity =
-        //         totalProducts[findIndexElement].quantity + items.quantity;
-        // } else {
-        // totalProducts.push({
-        //     id_product: items.id_product,
-        //     quantity: items.quantity,
-        //     pvp: items.pvp * items.quantity,
-        // });
-        //     idRepProduct = items.id_product;
-        // }
-        //
-        // if (!idRepProduct.includes(items.id_product)) {
-        //     idRepProduct.push(items.id_product);
-        //     const filter = basket_products.filter(
-        //         (itemsToFind) => itemsToFind.id_product === items.id_product,
-        //     );
-        //     totalProducts.push({
-        //         id_product: items.id_product,
-        //     });
-        //     console.log(filter);
-        // }
-        // //
-        // const filter = basket_products.filter(
-        //     (itemsToFind) => itemsToFind.id_product === items.id_product,
-        // );
-        // const a = filter.map((b) => {
-        //     // if (!!totalProducts.includes(b.id_product)) {
-        //     //     totalProducts.push({ id: b.id_product });
-        //     // }
-        //     console.log(totalProducts.includes(b.id_product));
-        // });
     });
-
-    // console.log(totalProducts);
+    try {
+        await Bills.create({
+            id_employee: basket.id_employee,
+            id_employeeUpdate: basket.id_employee,
+            products: totalProducts,
+            id_client: basket.id_client,
+            bill_number: 1,
+            bill_state: true,
+            date: Date.now().toString(),
+            date_update: Date.now().toString(),
+            tax: taxes.IGIC,
+            discount: 0,
+            total: basket.total,
+        });
+        res.send({ status: 'Ok', message: 'BILLS OK' });
+    } catch (e) {
+        res.status(500).send({ status: 'Error', message: 'ERROR FOR CREATE BILLS' });
+    }
 };
 
 const createBills = async (req, res) => {
@@ -91,10 +64,9 @@ const createBills = async (req, res) => {
         const consultsBasket = await Basket.findOne({
             id_employee: userCredential._id,
         });
-        const totalProducts = consultsBasket.basket_products;
-        await productsSold(totalProducts);
+        await productsSold(consultsBasket, req, res);
     } catch (e) {
-        console.log(e);
+        res.status(500).send({ status: 'Error', message: 'ERROR FOR CREATE BILLS' });
     }
 };
 
