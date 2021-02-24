@@ -1,15 +1,17 @@
 import Products from '../../../domine/model/products';
 import Store from '../../../domine/model/store';
+// Todo realizar cambios necesario para que solo exista store
 
 const findProduct = async (req) => {
-    return Products.findOne({ ean: req.body.ean }).select({
+    return Store.findOne({ ean: req.body.ean }).select({
         _id: 1,
+        stock: 1,
     });
 };
 
 const createProduct = async (req, res) => {
     try {
-        const { id_Provider, productName, ean, pvd, category, quantity } = req.body;
+        const { id_provider, productName, ean, pvd, category, stock } = req.body;
         const existProduct = await findProduct(req);
 
         if (existProduct) {
@@ -27,19 +29,13 @@ const createProduct = async (req, res) => {
                     );
                 });
         } else {
-            await Products.create({
-                id_Provider,
+            await Store.create({
+                id_provider,
                 productName,
                 ean,
                 pvd,
                 category,
-            }).then((product) => {
-                Store.create({
-                    id_Product: product._id,
-                    id_Provider: product.id_Provider,
-                    stock: quantity,
-                    category: product.category,
-                });
+                stock,
             });
         }
 
@@ -50,44 +46,60 @@ const createProduct = async (req, res) => {
 };
 const deleteProduct = async (req, res) => {
     try {
-        const { quantity } = req.body;
+        const { stock } = req.body;
         const existProduct = await findProduct(req);
-        if (existProduct) {
-            await Store.findOne({
-                id_Product: existProduct._id,
-            })
-                .select({ _id: 1, stock: 1, id_Product: 1 })
-                .then(async (stocks) => {
-                    if (stocks.stock > 0 && stocks.stock >= quantity) {
-                        const deleteStock = stocks.stock - parseInt(quantity);
-                        const stockController = await Store.findOneAndUpdate(
-                            { _id: stocks._id },
-                            {
-                                $set: {
-                                    stock: deleteStock,
-                                },
-                            },
-                            { new: true },
-                        );
-                        res.send({ status: 'ok', message: 'PRODUCT DELETED' });
-                        if (stockController.stock === 0) {
-                            await Store.findOneAndDelete({ _id: stocks._id })
-                                .select({
-                                    id_Product: 1,
-                                })
-                                .then(async (productToDeleted) => {
-                                    await Products.findByIdAndDelete({
-                                        _id: productToDeleted.id_Product,
-                                    });
-                                });
-                        }
-                    } else {
-                        res.status(500).send({
-                            status: 'Error',
-                            message: 'DELETED NOT POSSIBLE',
-                        });
-                    }
-                });
+        // if (existProduct) {
+        //     await Store.findOne({
+        //         id_Product: existProduct._id,
+        //     })
+        //         .select({ _id: 1, stock: 1, id_Product: 1 })
+        //         .then(async (stocks) => {
+        //             if (stocks.stock > 0 && stocks.stock >= stock) {
+        //                 const deleteStock = stocks.stock - parseInt(stock);
+        //                 await Store.findOneAndUpdate(
+        //                     { _id: stocks._id },
+        //                     {
+        //                         $set: {
+        //                             stock: deleteStock,
+        //                         },
+        //                     },
+        //                 );
+        //                 res.send({ status: 'ok', message: 'PRODUCT DELETED' });
+        //                 // if (stockController.stock === 0) {
+        //                 //     await Store.findOneAndDelete({ _id: stocks._id })
+        //                 //         .select({
+        //                 //             id_Product: 1,
+        //                 //         })
+        //                 //         .then(async (productToDeleted) => {
+        //                 //             await Products.findByIdAndDelete({
+        //                 //                 _id: productToDeleted.id_Product,
+        //                 //             });
+        //                 //         });
+        //                 // }
+        //             } else {
+        //                 res.status(500).send({
+        //                     status: 'Error',
+        //                     message: 'DELETED NOT POSSIBLE',
+        //                 });
+        //             }
+        //         });
+        // }
+        if (existProduct.stock >= stock) {
+            const deleteStock = existProduct.stock - parseInt(stock);
+            await Store.findByIdAndUpdate(
+                { _id: existProduct._id },
+                {
+                    $set: {
+                        stock: deleteStock,
+                    },
+                },
+            );
+            res.send({ status: 'ok', message: 'PRODUCT DELETED' });
+        } else {
+            res.status(500).send({
+                status: 'Error',
+                message: 'DELETED NOT POSSIBLE',
+            });
         }
     } catch (e) {
         res.status(500).send({ status: 'Error', message: 'DELETED NOT POSSIBLE' });
@@ -96,7 +108,7 @@ const deleteProduct = async (req, res) => {
 
 const findProducts = async (req, res) => {
     try {
-        await Products.find(req.body)
+        await Store.find(req.body)
             .select({ __v: 0 })
             .then((products) => {
                 res.send({

@@ -34,6 +34,7 @@ userRouters.post(
     providerController.providerRegister,
 );
 
+/* Endpoints crud productos */
 userRouters.post(
     '/products-register',
     middlewares.crudProduct,
