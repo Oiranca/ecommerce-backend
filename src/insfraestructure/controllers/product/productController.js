@@ -1,6 +1,4 @@
-import Products from '../../../domine/model/products';
 import Store from '../../../domine/model/store';
-// Todo realizar cambios necesario para que solo exista store
 
 const findProduct = async (req) => {
     return Store.findOne({ ean: req.body.ean }).select({
@@ -48,42 +46,7 @@ const deleteProduct = async (req, res) => {
     try {
         const { stock } = req.body;
         const existProduct = await findProduct(req);
-        // if (existProduct) {
-        //     await Store.findOne({
-        //         id_Product: existProduct._id,
-        //     })
-        //         .select({ _id: 1, stock: 1, id_Product: 1 })
-        //         .then(async (stocks) => {
-        //             if (stocks.stock > 0 && stocks.stock >= stock) {
-        //                 const deleteStock = stocks.stock - parseInt(stock);
-        //                 await Store.findOneAndUpdate(
-        //                     { _id: stocks._id },
-        //                     {
-        //                         $set: {
-        //                             stock: deleteStock,
-        //                         },
-        //                     },
-        //                 );
-        //                 res.send({ status: 'ok', message: 'PRODUCT DELETED' });
-        //                 // if (stockController.stock === 0) {
-        //                 //     await Store.findOneAndDelete({ _id: stocks._id })
-        //                 //         .select({
-        //                 //             id_Product: 1,
-        //                 //         })
-        //                 //         .then(async (productToDeleted) => {
-        //                 //             await Products.findByIdAndDelete({
-        //                 //                 _id: productToDeleted.id_Product,
-        //                 //             });
-        //                 //         });
-        //                 // }
-        //             } else {
-        //                 res.status(500).send({
-        //                     status: 'Error',
-        //                     message: 'DELETED NOT POSSIBLE',
-        //                 });
-        //             }
-        //         });
-        // }
+
         if (existProduct.stock >= stock) {
             const deleteStock = existProduct.stock - parseInt(stock);
             await Store.findByIdAndUpdate(

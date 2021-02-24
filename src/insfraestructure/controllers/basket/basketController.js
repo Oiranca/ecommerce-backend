@@ -2,8 +2,8 @@ import Basket from '../../../domine/model/basket';
 import Admins from '../../../domine/model/admins';
 import Employee from '../../../domine/model/employee';
 import Users from '../../../domine/model/users';
-import Product from '../../../domine/model/products';
 import roles from '../../../domine/model/roles';
+import Store from '../../../domine/model/store';
 import jwt from 'jsonwebtoken';
 import taxes from '../../../domine/model/tax';
 
@@ -171,7 +171,7 @@ const basketCrud = async (req, res) => {
             role,
         };
         const { ean, quantity, clientIdentification } = req.body;
-        const productToSell = await Product.findOne({ ean: ean }).select({
+        const productToSell = await Store.findOne({ ean: ean }).select({
             _id: 1,
             pvd: 1,
         });
