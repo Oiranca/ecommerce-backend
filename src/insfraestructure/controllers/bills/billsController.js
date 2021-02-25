@@ -7,7 +7,6 @@ import jwt from 'jsonwebtoken';
 import taxes from '../../../domine/model/tax';
 
 const productsSold = async (basket, req, res) => {
-    console.log(basket);
     const totalProducts = [];
 
     basket.basket_products.map((items) => {

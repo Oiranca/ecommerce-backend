@@ -127,7 +127,7 @@ const findProducts = async (req, res) => {
                                         }
                                     }
                                 });
-                                console.log(items);
+
                                 Store.find(req.body)
                                     .select({ __v: 0 })
                                     .then((products) => {
