@@ -1,4 +1,7 @@
 import Store from '../../../domine/model/store';
+import Bills from '../../../domine/model/bills';
+import Employee from '../../../domine/model/employee';
+import Admin from '../../../domine/model/admins';
 
 const findProduct = async (req) => {
     return Store.findOne({ ean: req.body.ean }).select({
@@ -9,7 +12,7 @@ const findProduct = async (req) => {
 
 const createProduct = async (req, res) => {
     try {
-        const { id_provider, productName, ean, pvd, category, stock } = req.body;
+        const { idProvider, productName, ean, pvd, category, stock } = req.body;
         const existProduct = await findProduct(req);
 
         if (existProduct) {
@@ -28,8 +31,8 @@ const createProduct = async (req, res) => {
                 });
         } else {
             await Store.create({
-                id_provider,
-                productName,
+                id_provider: idProvider,
+                product_name: productName,
                 ean,
                 pvd,
                 category,
@@ -69,16 +72,97 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+const findProductsToSeller = (bills, res) => {
+    try {
+        let data;
+        bills.map((billsActive) => (data = billsActive.products));
+        res.send({
+            status: 'ok',
+            data: data,
+        });
+    } catch (e) {
+        res.status(500).send({ status: 'Error', message: 'PRODUCTS NOT FOUND' });
+    }
+};
+
 const findProducts = async (req, res) => {
     try {
-        await Store.find(req.body)
-            .select({ __v: 0 })
-            .then((products) => {
-                res.send({
-                    status: 'ok',
-                    data: products,
-                });
+        let employeeExist;
+        if (req.body.id_employee !== '') {
+            employeeExist = await Employee.findOne({
+                _id: req.body.id_employee,
             });
+
+            if (!employeeExist) {
+                employeeExist = await Admin.findOne({
+                    _id: req.body.id_employee,
+                });
+                if (employeeExist) {
+                    await Bills.find({ id_employee: req.body.id_employee })
+                        .select({
+                            'products.id_product': 1,
+                            'products.quantity': 1,
+                            'products.product_name': 1,
+
+                            _id: 0,
+                        })
+                        .then((bills) => {
+                            findProductsToSeller(bills, res);
+                        });
+                } else {
+                    if (req.body.bestSeller) {
+                        await Bills.find({})
+                            .select({ _id: 0, products: 1 })
+                            .then((products) => {
+                                let items = {};
+                                products.map((element) => {
+                                    let quantityCompare = 0;
+                                    for (let a of element.products) {
+                                        if (a.quantity > quantityCompare) {
+                                            items = {
+                                                product_name: a.product_name,
+                                                quantity: a.quantity,
+                                            };
+                                            quantityCompare = a.quantity;
+                                        }
+                                    }
+                                });
+
+                                Store.find(req.body)
+                                    .select({ __v: 0 })
+                                    .then((products) => {
+                                        res.send({
+                                            status: 'ok',
+                                            data: items,
+                                        });
+                                    });
+                            });
+                    } else {
+                        await Store.find(req.body)
+                            .select({ __v: 0 })
+                            .then((products) => {
+                                res.send({
+                                    status: 'ok',
+                                    data: products,
+                                });
+                            });
+                    }
+                }
+            } else {
+                await Bills.find({ id_employee: req.body.id_employee })
+                    .select({
+                        'products.id_product': 1,
+                        'products.quantity': 1,
+                        'products.product_name': 1,
+
+                        _id: 0,
+                    })
+                    .then((bills) => {
+                        findProductsToSeller(bills, res);
+                    });
+            }
+        } else {
+        }
     } catch (e) {
         res.status(500).send({ status: 'Error', message: 'PRODUCT NOT FOUND' });
     }
