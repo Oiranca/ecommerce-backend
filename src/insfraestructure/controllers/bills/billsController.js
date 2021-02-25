@@ -12,6 +12,7 @@ const productsSold = async (basket, req, res) => {
     basket.basket_products.map((items) => {
         totalProducts.push({
             id_product: items.id_product,
+            product_name: items.product_name,
             quantity: items.quantity,
             pvp: items.pvp,
         });
