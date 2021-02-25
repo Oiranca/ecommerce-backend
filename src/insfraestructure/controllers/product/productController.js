@@ -1,5 +1,7 @@
 import Store from '../../../domine/model/store';
 import Bills from '../../../domine/model/bills';
+import Employee from '../../../domine/model/employee';
+import Admin from '../../../domine/model/admins';
 
 const findProduct = async (req) => {
     return Store.findOne({ ean: req.body.ean }).select({
@@ -70,14 +72,83 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-const findProductsToSeller = (bills) => {
-    bills.map((billsActive) => console.log(billsActive.products));
+const findProductsToSeller = (bills, res) => {
+    try {
+        let data;
+        bills.map((billsActive) => (data = billsActive.products));
+        res.send({
+            status: 'ok',
+            data: data,
+        });
+    } catch (e) {
+        res.status(500).send({ status: 'Error', message: 'PRODUCTS NOT FOUND' });
+    }
 };
 
 const findProducts = async (req, res) => {
     try {
+        let employeeExist;
         if (req.body.id_employee !== '') {
-            try {
+            employeeExist = await Employee.findOne({
+                _id: req.body.id_employee,
+            });
+
+            if (!employeeExist) {
+                employeeExist = await Admin.findOne({
+                    _id: req.body.id_employee,
+                });
+                if (employeeExist) {
+                    await Bills.find({ id_employee: req.body.id_employee })
+                        .select({
+                            'products.id_product': 1,
+                            'products.quantity': 1,
+                            'products.product_name': 1,
+
+                            _id: 0,
+                        })
+                        .then((bills) => {
+                            findProductsToSeller(bills, res);
+                        });
+                } else {
+                    if (req.body.bestSeller) {
+                        await Bills.find({})
+                            .select({ _id: 0, products: 1 })
+                            .then((products) => {
+                                let items = {};
+                                products.map((element) => {
+                                    let quantityCompare = 0;
+                                    for (let a of element.products) {
+                                        if (a.quantity > quantityCompare) {
+                                            items = {
+                                                product_name: a.product_name,
+                                                quantity: a.quantity,
+                                            };
+                                            quantityCompare = a.quantity;
+                                        }
+                                    }
+                                });
+                                console.log(items);
+                                Store.find(req.body)
+                                    .select({ __v: 0 })
+                                    .then((products) => {
+                                        res.send({
+                                            status: 'ok',
+                                            data: items,
+                                        });
+                                    });
+                            });
+                    } else {
+                        await Store.find(req.body)
+                            .select({ __v: 0 })
+                            .then((products) => {
+                                res.send({
+                                    status: 'ok',
+                                    data: products,
+                                });
+                            });
+                    }
+                }
+            } else {
                 await Bills.find({ id_employee: req.body.id_employee })
                     .select({
                         'products.id_product': 1,
@@ -87,20 +158,11 @@ const findProducts = async (req, res) => {
                         _id: 0,
                     })
                     .then((bills) => {
-                        findProductsToSeller(bills);
+                        findProductsToSeller(bills, res);
                     });
-            } catch (e) {
-                res.status(500).send({ status: 'Error', message: 'PRODUCT NOT FOUND' });
             }
+        } else {
         }
-        await Store.find(req.body)
-            .select({ __v: 0 })
-            .then((products) => {
-                res.send({
-                    status: 'ok',
-                    data: products,
-                });
-            });
     } catch (e) {
         res.status(500).send({ status: 'Error', message: 'PRODUCT NOT FOUND' });
     }
