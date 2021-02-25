@@ -1,4 +1,5 @@
 import Store from '../../../domine/model/store';
+import Bills from '../../../domine/model/bills';
 
 const findProduct = async (req) => {
     return Store.findOne({ ean: req.body.ean }).select({
@@ -9,7 +10,7 @@ const findProduct = async (req) => {
 
 const createProduct = async (req, res) => {
     try {
-        const { id_provider, productName, ean, pvd, category, stock } = req.body;
+        const { idProvider, productName, ean, pvd, category, stock } = req.body;
         const existProduct = await findProduct(req);
 
         if (existProduct) {
@@ -28,8 +29,8 @@ const createProduct = async (req, res) => {
                 });
         } else {
             await Store.create({
-                id_provider,
-                productName,
+                id_provider: idProvider,
+                product_name: productName,
                 ean,
                 pvd,
                 category,
@@ -69,8 +70,29 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+const findProductsToSeller = (bills) => {
+    bills.map((billsActive) => console.log(billsActive.products));
+};
+
 const findProducts = async (req, res) => {
     try {
+        if (req.body.id_employee !== '') {
+            try {
+                await Bills.find({ id_employee: req.body.id_employee })
+                    .select({
+                        'products.id_product': 1,
+                        'products.quantity': 1,
+                        'products.product_name': 1,
+
+                        _id: 0,
+                    })
+                    .then((bills) => {
+                        findProductsToSeller(bills);
+                    });
+            } catch (e) {
+                res.status(500).send({ status: 'Error', message: 'PRODUCT NOT FOUND' });
+            }
+        }
         await Store.find(req.body)
             .select({ __v: 0 })
             .then((products) => {

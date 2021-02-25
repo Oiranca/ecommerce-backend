@@ -2,7 +2,6 @@ import express from 'express';
 import usersController from '../controllers/users/usersController';
 import productController from '../controllers/product/productController';
 import providerController from '../controllers/provider/providerController';
-import storeController from '../controllers/store/storeController';
 import loginController from '../controllers/login/loginController';
 import profileController from '../controllers/profiles/profileController';
 import { middlewares } from '../../domine/middlewares/auth';
@@ -20,6 +19,7 @@ userRouters.post(
 );
 
 /*Sólo el administrador puede crear al empleado y al provider*/
+
 userRouters.post(
     '/employee/employee-register',
     middlewares.isCorrectHost,
@@ -35,6 +35,7 @@ userRouters.post(
 );
 
 /* Endpoints crud productos */
+
 userRouters.post(
     '/products-register',
     middlewares.crudProduct,
@@ -45,13 +46,13 @@ userRouters.post(
     middlewares.crudProduct,
     productController.deleteProduct,
 );
+
+/*Find products*/
 userRouters.post(
     '/find-product',
     middlewares.crudProduct,
     productController.findProducts,
 );
-
-userRouters.post('/store', storeController.registerInStore);
 
 //Login Routes
 userRouters.post('/login', middlewares.isCorrectHost, loginController.login);
