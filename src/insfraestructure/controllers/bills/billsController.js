@@ -71,4 +71,14 @@ const createBills = async (req, res) => {
     }
 };
 
-export const billsController = { createBills };
+const searchAllBills = async (req, res) => {
+    try {
+        await Bills.findOne({}).then((allBills) =>
+            res.send({ status: 'OK', data: allBills }),
+        );
+    } catch (e) {
+        res.status(500).send({ status: 'Error', message: 'BILLS NOT FOUND' });
+    }
+};
+
+export const billsController = { createBills, searchAllBills };
