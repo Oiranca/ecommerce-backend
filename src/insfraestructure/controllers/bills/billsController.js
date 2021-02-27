@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 
 const productsSold = async (basket, req, res) => {
     const totalProducts = [];
-
+    const date = new Date();
     basket.basket_products.map((items) => {
         totalProducts.push({
             id_product: items.id_product,
@@ -21,20 +21,41 @@ const productsSold = async (basket, req, res) => {
         });
     });
     try {
-        await Bills.create({
-            id_employee: basket.id_employee,
-            id_employeeUpdate: basket.id_employee,
-            products: totalProducts,
-            id_client: basket.id_client,
-            bill_number: 1,
-            bill_state: true,
-            date: Date.now().toString(),
-            date_update: Date.now().toString(),
-            tax: taxes.IGIC,
-            discount: 0,
-            total: basket.total,
-        });
-        res.send({ status: 'Ok', message: 'BILLS OK' });
+        const billsCount = await Bills.findOne({}, {})
+            .sort({ bill_number: -1 })
+            .select({ _id: 0, bill_number: 1 });
+
+        if (!billsCount) {
+            await Bills.create({
+                id_employee: basket.id_employee,
+                id_employeeUpdate: basket.id_employee,
+                products: totalProducts,
+                id_client: basket.id_client,
+                bill_number: 0,
+                bill_state: true,
+                date: date.toString(),
+                date_update: date.toString(),
+                tax: taxes.IGIC,
+                discount: 0,
+                total: basket.total,
+            });
+            res.send({ status: 'Ok', message: 'BILLS OK' });
+        } else {
+            await Bills.create({
+                id_employee: basket.id_employee,
+                id_employeeUpdate: basket.id_employee,
+                products: totalProducts,
+                id_client: basket.id_client,
+                bill_number: billsCount.bill_number + 1,
+                bill_state: true,
+                date: date.toString(),
+                date_update: date.toString(),
+                tax: taxes.IGIC,
+                discount: 0,
+                total: basket.total,
+            });
+            res.send({ status: 'Ok', message: 'BILLS OK' });
+        }
     } catch (e) {
         res.status(500).send({ status: 'Error', message: 'ERROR FOR CREATE BILLS' });
     }
@@ -102,6 +123,22 @@ const searchAllBills = async (req, res) => {
         }
     } catch (e) {
         res.status(500).send({ status: 'Error', message: 'BILLS NOT FOUND' });
+    }
+};
+const modifyBills = async (req, res) => {
+    try {
+        const role = credentialUserOrCompany(req).role;
+        const email = credentialUserOrCompany(req).email;
+        switch (role) {
+            case roles.admin:
+                const adminUpdateBills = await Admins.findOne({ email: email }).select({
+                    _id: 1,
+                });
+
+                break;
+        }
+    } catch (e) {
+        res.send({ status: e, message: 'ROLE IS NOT CORRECT' });
     }
 };
 

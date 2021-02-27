@@ -21,7 +21,7 @@ const createProduct = async (req, res) => {
             })
                 .select({ _id: 1, stock: 1 })
                 .then(async (stocks) => {
-                    const sumStock = stocks.stock + parseInt(quantity);
+                    const sumStock = stocks.stock + parseInt(stock);
                     await Store.findOneAndUpdate(
                         { _id: stocks._id },
                         {

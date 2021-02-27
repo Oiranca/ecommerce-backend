@@ -38,19 +38,19 @@ userRouters.post(
 
 userRouters.post(
     '/products-register',
-    middlewares.crudProduct,
+    middlewares.existIntoCompany,
     productController.createProduct,
 );
 userRouters.post(
     '/deleted-product',
-    middlewares.crudProduct,
+    middlewares.existIntoCompany,
     productController.deleteProduct,
 );
 
 /*Find products*/
 userRouters.post(
     '/find-product',
-    middlewares.crudProduct,
+    middlewares.existIntoCompany,
     productController.findProducts,
 );
 
@@ -131,6 +131,13 @@ userRouters.get(
     '/all-bills',
     middlewares.isCorrectHost,
     middlewares.checkAuth,
+    billsController.searchAllBills,
+);
+userRouters.post(
+    '/modify-bills',
+    middlewares.isCorrectHost,
+    middlewares.checkAuth,
+    middlewares.existIntoCompany,
     billsController.searchAllBills,
 );
 
