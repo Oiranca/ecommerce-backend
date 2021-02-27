@@ -2,9 +2,12 @@ import Basket from '../../../domine/model/basket';
 import Bills from '../../../domine/model/bills';
 import Admins from '../../../domine/model/admins';
 import Employee from '../../../domine/model/employee';
+import Users from '../../../domine/model/users';
+
 import roles from '../../../domine/model/roles';
-import jwt from 'jsonwebtoken';
 import taxes from '../../../domine/model/tax';
+
+import jwt from 'jsonwebtoken';
 
 const productsSold = async (basket, req, res) => {
     const totalProducts = [];
@@ -37,17 +40,21 @@ const productsSold = async (basket, req, res) => {
     }
 };
 
+const credentialUserOrCompany = (req) => {
+    const tokenUser = req.headers['token-users'];
+
+    const { email, role } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
+    req.session = {
+        email,
+        role,
+    };
+    return { role, email };
+};
+
 const createBills = async (req, res) => {
     try {
         let userCredential;
-
-        const tokenUser = req.headers['token-users'];
-
-        const { email, role } = jwt.verify(tokenUser, process.env.SECRET_TOKEN);
-        req.session = {
-            email,
-            role,
-        };
+        const role = credentialUserOrCompany(req).role;
 
         switch (role) {
             case roles.admin:
@@ -73,9 +80,26 @@ const createBills = async (req, res) => {
 
 const searchAllBills = async (req, res) => {
     try {
-        await Bills.findOne({}).then((allBills) =>
-            res.send({ status: 'OK', data: allBills }),
-        );
+        const role = credentialUserOrCompany(req).role;
+        const email = credentialUserOrCompany(req).email;
+        switch (role) {
+            case roles.client:
+                const UserId = await Users.findOne({
+                    email: email,
+                })
+                    .select({ _id: 1 })
+                    .then((searchBillsUser) =>
+                        Bills.find({
+                            id_client: searchBillsUser._id,
+                        }).then((allBills) => res.send({ status: 'OK', data: allBills })),
+                    );
+                break;
+            default:
+                await Bills.find({}).then((allBills) =>
+                    res.send({ status: 'OK', data: allBills }),
+                );
+                break;
+        }
     } catch (e) {
         res.status(500).send({ status: 'Error', message: 'BILLS NOT FOUND' });
     }

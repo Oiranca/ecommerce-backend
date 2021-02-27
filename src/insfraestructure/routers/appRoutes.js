@@ -131,7 +131,6 @@ userRouters.get(
     '/all-bills',
     middlewares.isCorrectHost,
     middlewares.checkAuth,
-    middlewares.crudProduct,
     billsController.searchAllBills,
 );
 
