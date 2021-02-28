@@ -39,7 +39,6 @@ const productsSold = async (basket, req, res) => {
         });
 
         if (!billsCount) {
-            console.log('a');
             await Bills.create({
                 id_employee: basket.id_employee,
                 id_employeeUpdate: basket.id_employee,
@@ -57,8 +56,6 @@ const productsSold = async (basket, req, res) => {
             });
             res.send({ status: 'Ok', message: 'BILLS OK' });
         } else {
-            console.log(basket.total);
-
             await Bills.create({
                 id_employee: basket.id_employee,
                 id_employeeUpdate: basket.id_employee,
@@ -172,7 +169,6 @@ const modifyBills = async (req, res) => {
                                         dataIntoBody.id_employee !==
                                             searchBills.id_employee
                                     ) {
-                                        // console.log('id_employee');
                                     }
                                     break;
 
@@ -267,14 +263,14 @@ const modifyBills = async (req, res) => {
                                     let totalIntoBill;
                                     const idProductToModify = await Store.findOne({
                                         ean: req.body.products.ean,
-                                    }).select({ _id: 1 });
+                                    }).select({ _id: 1, pvd: 1 });
 
                                     const productIntoBill = await Bills.findOne({
                                         bill_number: req.body.bill_number,
                                     }).select({ _id: 0, products: 1, total: 1 });
 
                                     productModify = productIntoBill.products;
-
+                                    totalIntoBill = productIntoBill.total;
                                     productModify.map((itemsToModify) => {
                                         if (
                                             itemsToModify.id_product ===
@@ -291,6 +287,11 @@ const modifyBills = async (req, res) => {
                                                             index
                                                         ].quantity +=
                                                             req.body.products.quantity;
+                                                        totalIntoBill +=
+                                                            productIntoBill.products[
+                                                                index
+                                                            ].pvp *
+                                                            req.body.products.quantity;
                                                         return productModify;
                                                     } else if (
                                                         productIntoBill.products[index]
@@ -305,8 +306,20 @@ const modifyBills = async (req, res) => {
                                                             index
                                                         ].quantity +=
                                                             req.body.products.quantity;
+                                                        totalIntoBill +=
+                                                            productIntoBill.products[
+                                                                index
+                                                            ].pvp *
+                                                            req.body.products.quantity;
                                                         return productModify;
                                                     } else {
+                                                        totalIntoBill -=
+                                                            productIntoBill.products[
+                                                                index
+                                                            ].pvp *
+                                                            productIntoBill.products[
+                                                                index
+                                                            ].quantity;
                                                         productIntoBill.products.splice(
                                                             index,
                                                             1,
@@ -316,6 +329,26 @@ const modifyBills = async (req, res) => {
                                             }
                                         }
                                     });
+                                    try {
+                                        await Bills.findOneAndUpdate(
+                                            { bill_number: req.body.bill_number },
+                                            {
+                                                $set: {
+                                                    products: productModify,
+                                                    total: totalIntoBill,
+                                                },
+                                            },
+                                        );
+                                        res.send({
+                                            status: '200',
+                                            message: 'BILLS MODIFY',
+                                        });
+                                    } catch (e) {
+                                        res.send({
+                                            status: e,
+                                            message: 'MODIFY BILLS NOT POSSIBLE',
+                                        });
+                                    }
                             }
                         }
                     }
