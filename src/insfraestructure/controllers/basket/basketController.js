@@ -83,7 +83,7 @@ const insertProductsIntoBasket = async (
 
     if (idShopOnline) {
         if (idProductActive.toString()) {
-            const a = await Basket.findOneAndUpdate(
+            await Basket.findOneAndUpdate(
                 {
                     _id: idShopOnline,
                 },

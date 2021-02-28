@@ -117,7 +117,7 @@ const middleware = {
             res.send({ status: 403, message: e.message });
         }
     },
-    crudProduct: (req, res, next) => {
+    existIntoCompany: (req, res, next) => {
         try {
             const tokenUser = req.headers['token-users'];
             if (tokenUser) {
