@@ -264,45 +264,53 @@ const modifyBills = async (req, res) => {
                                     break;
                                 case 'products':
                                     let productModify;
+                                    let totalIntoBill;
                                     const idProductToModify = await Store.findOne({
                                         ean: req.body.products.ean,
                                     }).select({ _id: 1 });
 
                                     const productIntoBill = await Bills.findOne({
                                         bill_number: req.body.bill_number,
-                                    })
-                                        .select({ _id: 0, products: 1 })
-                                        .then((productsBill) => productsBill.products);
+                                    }).select({ _id: 0, products: 1, total: 1 });
 
-                                    productModify = productIntoBill;
+                                    productModify = productIntoBill.products;
+
                                     productModify.map((itemsToModify) => {
                                         if (
                                             itemsToModify.id_product ===
                                             idProductToModify._id.toString()
                                         ) {
-                                            for (let index in productIntoBill) {
+                                            for (let index in productIntoBill.products) {
                                                 if (
-                                                    productIntoBill[index].id_product ===
+                                                    productIntoBill.products[index]
+                                                        .id_product ===
                                                     idProductToModify._id.toString()
                                                 ) {
                                                     if (req.body.products.quantity > 0) {
-                                                        // productIntoBill[index].quantity +=
-                                                        //     req.body.products.quantity;
-                                                        // return productModify;
+                                                        productIntoBill.products[
+                                                            index
+                                                        ].quantity +=
+                                                            req.body.products.quantity;
+                                                        return productModify;
                                                     } else if (
-                                                        productIntoBill[index].quantity -
+                                                        productIntoBill.products[index]
+                                                            .quantity -
                                                             Math.abs(
                                                                 req.body.products
                                                                     .quantity,
                                                             ) >
                                                         0
                                                     ) {
-                                                        productIntoBill[index].quantity +=
+                                                        productIntoBill.products[
+                                                            index
+                                                        ].quantity +=
                                                             req.body.products.quantity;
                                                         return productModify;
                                                     } else {
-                                                        // console.log(3);
-                                                        productIntoBill.splice(index, 1);
+                                                        productIntoBill.products.splice(
+                                                            index,
+                                                            1,
+                                                        );
                                                     }
                                                 }
                                             }
