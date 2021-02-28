@@ -3,11 +3,15 @@ import Bills from '../../../domine/model/bills';
 import Admins from '../../../domine/model/admins';
 import Employee from '../../../domine/model/employee';
 import Users from '../../../domine/model/users';
+import Store from '../../../domine/model/store';
 
 import roles from '../../../domine/model/roles';
 import taxes from '../../../domine/model/tax';
 
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { updateProfile } from '../profiles/updateProfileController';
+import Client from '../../../domine/model/users';
 
 const productsSold = async (basket, req, res) => {
     const totalProducts = [];
@@ -157,8 +161,158 @@ const modifyBills = async (req, res) => {
                     client_identification: req.body.client_identification,
                     date: req.body.date,
                 });
+                for (let searchBillsNumber of searchBills) {
+                    if (req.body.bill_number === searchBillsNumber.bill_number) {
+                        const dataIntoBody = req.body;
+                        for (let keys of Object.keys(dataIntoBody)) {
+                            switch (keys) {
+                                case 'id_employee':
+                                    if (
+                                        dataIntoBody.id_employee !== '' &&
+                                        dataIntoBody.id_employee !==
+                                            searchBills.id_employee
+                                    ) {
+                                        // console.log('id_employee');
+                                    }
+                                    break;
 
-                console.log(searchBills);
+                                case 'address':
+                                    const addressKeys = Object.keys(
+                                        dataIntoBody['address'],
+                                    );
+                                    // for (let addressItems of addressKeys) {
+                                    //     if (
+                                    //         dataIntoBody.address[addressItems] !==
+                                    //             searchBills.client_address[
+                                    //                 addressItems
+                                    //             ] &&
+                                    //         dataIntoBody.address[addressItems] !== ''
+                                    //     ) {
+                                    //         switch (addressItems) {
+                                    //             case 'street':
+                                    //                 await Bills.findOneAndUpdate(
+                                    //                     {
+                                    //                         bill_number:
+                                    //                             req.body.bill_number,
+                                    //                     },
+                                    //                     {
+                                    //                         $set: {
+                                    //                             'address.street':
+                                    //                                 dataIntoBody.address[
+                                    //                                     'street'
+                                    //                                 ],
+                                    //                         },
+                                    //                     },
+                                    //                 );
+                                    //
+                                    //                 break;
+                                    //
+                                    //             case 'numberStreet':
+                                    //                 await Bills.findOneAndUpdate(
+                                    //                     {
+                                    //                         bill_number:
+                                    //                             req.body.bill_number,
+                                    //                     },
+                                    //                     {
+                                    //                         $set: {
+                                    //                             'address.numberStreet':
+                                    //                                 dataIntoBody.address[
+                                    //                                     'numberStreet'
+                                    //                                 ],
+                                    //                         },
+                                    //                     },
+                                    //                 );
+                                    //                 break;
+                                    //
+                                    //             case 'level':
+                                    //                 await Bills.findOneAndUpdate(
+                                    //                     {
+                                    //                         bill_number:
+                                    //                             req.body.bill_number,
+                                    //                     },
+                                    //                     {
+                                    //                         $set: {
+                                    //                             'address.level':
+                                    //                                 dataIntoBody.address[
+                                    //                                     'level'
+                                    //                                 ],
+                                    //                         },
+                                    //                     },
+                                    //                 );
+                                    //                 break;
+                                    //
+                                    //             case 'postalCode':
+                                    //                 await Bills.findOneAndUpdate(
+                                    //                     {
+                                    //                         bill_number:
+                                    //                             req.body.bill_number,
+                                    //                     },
+                                    //                     {
+                                    //                         $set: {
+                                    //                             'address.postalCode':
+                                    //                                 dataIntoBody.address[
+                                    //                                     'postalCode'
+                                    //                                 ],
+                                    //                         },
+                                    //                     },
+                                    //                 );
+                                    //                 break;
+                                    //         }
+                                    //     }
+                                    // }
+
+                                    break;
+                                case 'products':
+                                    let productModify;
+                                    const idProductToModify = await Store.findOne({
+                                        ean: req.body.products.ean,
+                                    }).select({ _id: 1 });
+
+                                    const productIntoBill = await Bills.findOne({
+                                        bill_number: req.body.bill_number,
+                                    })
+                                        .select({ _id: 0, products: 1 })
+                                        .then((productsBill) => productsBill.products);
+
+                                    productModify = productIntoBill;
+                                    productModify.map((itemsToModify) => {
+                                        if (
+                                            itemsToModify.id_product ===
+                                            idProductToModify._id.toString()
+                                        ) {
+                                            for (let index in productIntoBill) {
+                                                if (
+                                                    productIntoBill[index].id_product ===
+                                                    idProductToModify._id.toString()
+                                                ) {
+                                                    if (req.body.products.quantity > 0) {
+                                                        // productIntoBill[index].quantity +=
+                                                        //     req.body.products.quantity;
+                                                        // return productModify;
+                                                    } else if (
+                                                        productIntoBill[index].quantity -
+                                                            Math.abs(
+                                                                req.body.products
+                                                                    .quantity,
+                                                            ) >
+                                                        0
+                                                    ) {
+                                                        productIntoBill[index].quantity +=
+                                                            req.body.products.quantity;
+                                                        return productModify;
+                                                    } else {
+                                                        // console.log(3);
+                                                        productIntoBill.splice(index, 1);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+                    }
+                }
+
                 break;
             case roles.employee:
                 const employeeUpdateBills = await Employee.findOne({

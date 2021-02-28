@@ -24,6 +24,8 @@ const init = async () => {
 init()
     .then(() => {
         console.log('Connected to Mongodb');
-        app.listen(process.env.PORT);
+        app.listen(process.env.PORT, () => {
+            console.log(`Connected to port ${process.env.PORT}`);
+        });
     })
     .catch((e) => console.log('Mongodb error', e));
