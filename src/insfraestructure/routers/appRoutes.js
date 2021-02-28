@@ -138,7 +138,7 @@ userRouters.post(
     middlewares.isCorrectHost,
     middlewares.checkAuth,
     middlewares.existIntoCompany,
-    billsController.searchAllBills,
+    billsController.modifyBills,
 );
 
 export default userRouters;

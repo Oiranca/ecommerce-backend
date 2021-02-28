@@ -15,6 +15,15 @@ const billsModel = new Schema({
         required: true,
     },
     id_client: { type: String, required: true },
+    client_address: {
+        type: {
+            street: { type: String, required: true },
+            numberStreet: { type: Number, required: true },
+            level: { type: String, required: false },
+            postalCode: { type: Number, required: true },
+        },
+    },
+    client_identification: { type: String, required: true, unique: true },
     bill_number: { type: Number, required: true },
     bill_state: { type: Boolean, required: true, default: true },
     date: { type: String, required: true },

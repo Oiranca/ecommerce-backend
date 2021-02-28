@@ -12,6 +12,8 @@ import jwt from 'jsonwebtoken';
 const productsSold = async (basket, req, res) => {
     const totalProducts = [];
     const date = new Date();
+    const dateForBills = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+
     basket.basket_products.map((items) => {
         totalProducts.push({
             id_product: items.id_product,
@@ -24,6 +26,11 @@ const productsSold = async (basket, req, res) => {
         const billsCount = await Bills.findOne({}, {})
             .sort({ bill_number: -1 })
             .select({ _id: 0, bill_number: 1 });
+        const dataClient = await Users.findOne({ _id: basket.id_client }).select({
+            _id: 0,
+            address: 1,
+            identification: 1,
+        });
 
         if (!billsCount) {
             await Bills.create({
@@ -31,10 +38,12 @@ const productsSold = async (basket, req, res) => {
                 id_employeeUpdate: basket.id_employee,
                 products: totalProducts,
                 id_client: basket.id_client,
+                client_address: dataClient.address,
+                client_identification: dataClient.identification,
                 bill_number: 0,
                 bill_state: true,
-                date: date.toString(),
-                date_update: date.toString(),
+                date: dateForBills,
+                date_update: dateForBills,
                 tax: taxes.IGIC,
                 discount: 0,
                 total: basket.total,
@@ -46,10 +55,12 @@ const productsSold = async (basket, req, res) => {
                 id_employeeUpdate: basket.id_employee,
                 products: totalProducts,
                 id_client: basket.id_client,
+                client_address: dataClient.address,
+                client_identification: dataClient.identification,
                 bill_number: billsCount.bill_number + 1,
                 bill_state: true,
-                date: date.toString(),
-                date_update: date.toString(),
+                date: dateForBills,
+                date_update: dateForBills,
                 tax: taxes.IGIC,
                 discount: 0,
                 total: basket.total,
@@ -105,7 +116,7 @@ const searchAllBills = async (req, res) => {
         const email = credentialUserOrCompany(req).email;
         switch (role) {
             case roles.client:
-                const UserId = await Users.findOne({
+                await Users.findOne({
                     email: email,
                 })
                     .select({ _id: 1 })
@@ -125,6 +136,9 @@ const searchAllBills = async (req, res) => {
         res.status(500).send({ status: 'Error', message: 'BILLS NOT FOUND' });
     }
 };
+
+// TODO hacer un filtro por dni, fecha e id de la factura, para poder buscar la factura a modificar
+//  y luego hacer la modificación sobre el id de la factura
 const modifyBills = async (req, res) => {
     try {
         const role = credentialUserOrCompany(req).role;
@@ -134,7 +148,18 @@ const modifyBills = async (req, res) => {
                 const adminUpdateBills = await Admins.findOne({ email: email }).select({
                     _id: 1,
                 });
-
+                const searchBills = await Bills.find(
+                    { id_employee: adminUpdateBills._id.toString() },
+                    {},
+                );
+                break;
+            case roles.employee:
+                const employeeUpdateBills = await Employee.findOne({
+                    email: email,
+                }).select({
+                    _id: 1,
+                });
+                console.log(employeeUpdateBills);
                 break;
         }
     } catch (e) {
@@ -142,4 +167,4 @@ const modifyBills = async (req, res) => {
     }
 };
 
-export const billsController = { createBills, searchAllBills };
+export const billsController = { createBills, searchAllBills, modifyBills };

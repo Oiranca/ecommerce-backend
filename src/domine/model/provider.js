@@ -10,7 +10,7 @@ const userProvider = new Schema({
     address: {
         street: { type: String, required: true },
         numberStreet: { type: Number, required: true },
-        floor: { type: String, required: false },
+        level: { type: String, required: false },
         postalCode: { type: Number, required: true },
     },
     emailIsConfirmed: { type: Boolean, required: true, default: false },
