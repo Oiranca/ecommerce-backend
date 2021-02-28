@@ -23,7 +23,7 @@ const billsModel = new Schema({
             postalCode: { type: Number, required: true },
         },
     },
-    client_identification: { type: String, required: true, unique: true },
+    client_identification: { type: String, required: true },
     bill_number: { type: Number, required: true },
     bill_state: { type: Boolean, required: true, default: true },
     date: { type: String, required: true },

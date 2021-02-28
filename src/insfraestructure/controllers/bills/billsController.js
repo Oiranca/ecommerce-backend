@@ -13,7 +13,8 @@ const productsSold = async (basket, req, res) => {
     const totalProducts = [];
     const date = new Date();
     const dateForBills = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-
+    const { client_identification } = req.body;
+    //
     basket.basket_products.map((items) => {
         totalProducts.push({
             id_product: items.id_product,
@@ -26,20 +27,22 @@ const productsSold = async (basket, req, res) => {
         const billsCount = await Bills.findOne({}, {})
             .sort({ bill_number: -1 })
             .select({ _id: 0, bill_number: 1 });
-        const dataClient = await Users.findOne({ _id: basket.id_client }).select({
+        const dataClient = await Users.findOne({
+            identification: client_identification,
+        }).select({
             _id: 0,
             address: 1,
-            identification: 1,
         });
 
         if (!billsCount) {
+            console.log('a');
             await Bills.create({
                 id_employee: basket.id_employee,
                 id_employeeUpdate: basket.id_employee,
                 products: totalProducts,
                 id_client: basket.id_client,
                 client_address: dataClient.address,
-                client_identification: dataClient.identification,
+                client_identification: client_identification,
                 bill_number: 0,
                 bill_state: true,
                 date: dateForBills,
@@ -50,13 +53,15 @@ const productsSold = async (basket, req, res) => {
             });
             res.send({ status: 'Ok', message: 'BILLS OK' });
         } else {
+            console.log(basket.total);
+
             await Bills.create({
                 id_employee: basket.id_employee,
                 id_employeeUpdate: basket.id_employee,
                 products: totalProducts,
                 id_client: basket.id_client,
                 client_address: dataClient.address,
-                client_identification: dataClient.identification,
+                client_identification: client_identification,
                 bill_number: billsCount.bill_number + 1,
                 bill_state: true,
                 date: dateForBills,
@@ -65,10 +70,11 @@ const productsSold = async (basket, req, res) => {
                 discount: 0,
                 total: basket.total,
             });
+
             res.send({ status: 'Ok', message: 'BILLS OK' });
         }
     } catch (e) {
-        res.status(500).send({ status: 'Error', message: 'ERROR FOR CREATE BILLS' });
+        res.status(500).send({ status: e, message: 'ERROR FOR CREATE BILLS' });
     }
 };
 
@@ -137,8 +143,6 @@ const searchAllBills = async (req, res) => {
     }
 };
 
-// TODO hacer un filtro por dni, fecha e id de la factura, para poder buscar la factura a modificar
-//  y luego hacer la modificación sobre el id de la factura
 const modifyBills = async (req, res) => {
     try {
         const role = credentialUserOrCompany(req).role;
@@ -148,10 +152,13 @@ const modifyBills = async (req, res) => {
                 const adminUpdateBills = await Admins.findOne({ email: email }).select({
                     _id: 1,
                 });
-                const searchBills = await Bills.find(
-                    { id_employee: adminUpdateBills._id.toString() },
-                    {},
-                );
+                const searchBills = await Bills.find({
+                    id_employee: adminUpdateBills._id.toString(),
+                    client_identification: req.body.client_identification,
+                    date: req.body.date,
+                });
+
+                console.log(searchBills);
                 break;
             case roles.employee:
                 const employeeUpdateBills = await Employee.findOne({
@@ -159,7 +166,7 @@ const modifyBills = async (req, res) => {
                 }).select({
                     _id: 1,
                 });
-                console.log(employeeUpdateBills);
+
                 break;
         }
     } catch (e) {
